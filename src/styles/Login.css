@@ -1,0 +1,223 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.login-page {
+    font-family: 'Arial', Tahoma, Geneva, Verdana, sans-serif;    
+    background: linear-gradient(135deg, #006b65, #ff0000);
+
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* alineamos hacia arriba */
+    align-items: center;
+    padding-top: 100px; /* espacio desde el header */
+    position: relative;
+}
+
+
+
+.header-bar {
+    position: fixed;  /* Cambié de absolute a fixed */
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.1rem;
+    text-indent: 66px;
+    font-size: 1.3rem;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.header-bar .navbar-brand {
+    text-decoration: none;
+    color: #224aff;
+    font-weight: bold;
+}
+
+/* Login container modernizado */
+.login-container {
+    background: rgb(226, 247, 255);
+    border-radius: 20px;
+    padding: 5rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(0, 0, 0);
+    width: 100%;
+    max-width: 500px;
+}
+
+/* Header del login */
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+   background: linear-gradient(120deg, #ff0000, #ff0000);
+    background-clip: text;
+    -webkit-text-fill-color:hsl(0, 100%, 50%);
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.login-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    line-height: 1.2;
+   background: rgb(72, 0, 255);
+    
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #ff0000; /* Fallback */
+}
+
+/* Grupos de input */
+.input-group {
+    margin-bottom: 1rem;
+}
+
+/* Inputs modernizados */
+#username, #password {
+    width: 100%;
+    height: 50px;
+    padding: 1rem;
+    border: 2px solid rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+#username:focus, #password:focus {
+    outline: none;
+    border-color: #475ec5;
+    background: rgba(255, 255, 255, 0.95);
+    
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+#username::placeholder, #password::placeholder {
+    color: #5e5c5c;
+}
+
+/* Botones personalizados */
+.btn-primary {
+    background: white !important;
+    color: #8000ff !important;
+    border: 5px solid #8000ff !important;
+    border-radius: 10px;
+    font-weight: 500;
+    padding: 0.75rem 2rem; /* Corregí el padding excesivo */
+    transition: all 0.9s ease;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #8000ff !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Footer del login */
+.login-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.forgot-password {
+    color: #667eeaae;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.forgot-password:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Footer principal */
+.footer {
+    position: fixed; /* lo mantenemos fijo abajo */
+    bottom: 0;
+    width: 100%;
+    padding: 1.8rem 1.5rem; /* aumentar el tamaño vertical */
+    background: rgba(255, 255, 255, 0.502);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.footer-links a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #764ba2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .login-container {
+        margin: 1rem;
+        padding: 2rem;
+        margin-top: 100px;
+    }
+    
+    .header-bar {
+        text-indent: 20px;
+        font-size: 1.1rem;
+        padding: 0.8rem;
+    }
+    
+    .footer .container {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 1.5rem;
+        margin-top: 120px;
+    }
+    
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
+}

@@ -1,0 +1,433 @@
+body {
+  overflow-x: hidden; /* Oculta el scroll horizontal */
+  width: 100%; /* Asegura que ocupe todo el ancho */
+  overflow-y: auto; /* Permite el scroll vertical */
+}
+
+/* Quitar cualquier fondo de la página */
+html, body {
+ background-color: #f0e0d6 !important;
+  background-image: none !important;
+}
+.home-container {
+  padding-top: 0.5rem; /* Ajusta según la altura de tu navbar */
+}
+.titulo{
+  margin-top: 4rem;
+}
+.hero-section {
+  height: 100vh;
+  background: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0.5)), 
+              url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.auto&auto=format&fit=crop&w=1600&h=800') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgb(0, 0, 0);
+  margin-top: -80px; /* Compensa el padding del contenedor */
+}
+
+.hero-content h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.hero-content p {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.services-section,
+.gallery-section,
+.testimonials-section,
+.contact-section {
+  padding: 80px 0;
+}
+
+
+/* Estilos para las tarjetas de servicio */
+.services-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+.service-card {
+  background: rgb(255, 255, 255);
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.172);
+  transition: transform 0.3s ease;
+  width: 200px;
+  height: 300px; /* 👈 alto fijo */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  
+  width: 300px;       /* 👈 ancho fijo */
+  /* o flex: 1 1 300px; para responsive */
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+}
+
+
+/* Estilos para los iconos de servicio */
+.service-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.luxury-icon {
+  background-color: #ffdd00;
+  color: rgb(255, 255, 255);
+}
+
+.location-icon {
+  background-color: #0000ff;
+  color: rgb(255, 255, 255);
+}
+
+.dining-icon {
+  background-color: #ff4500;
+  color: rgb(255, 255, 255);
+}
+
+/* Estilos para los títulos y párrafos */
+.service-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #1a2a6c;
+}
+
+.service-card p {
+  margin-bottom: 0;
+  color: #3a3a3a;
+}
+
+/* Estilos para la galería */
+.gallery-section {
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+    color: rgb(255, 255, 255);
+}
+
+.gallery-item {
+  position: relative;
+  height: 300px;
+  background-color: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.gallery-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+}
+
+.gallery-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 40, 0.899));
+  color: rgb(255, 255, 255);
+  padding: 10px;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+}
+
+.gallery-item:hover .gallery-overlay {
+  opacity: 1;
+}
+
+/* Estilos para testimonios */
+.testimonial-card {
+  background: rgb(253, 253, 253);
+  border-radius: 10px;
+  padding: 40px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.779);
+  height: 100%;
+  transform: translateY(0);
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonial-rating {
+  color: #ffff00;
+  margin-bottom: 15px;
+  font-size: 2rem;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.author-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Asegurar que el cuerpo ocupe toda la altura */
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Contenedor principal debe expandirse */
+.main-content {
+  flex: 1 0 auto;
+}
+
+/* Títulos más compactos */
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+/* Estilos para los elementos de contacto - footer compacto */
+.contact-footer {
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+  color: rgb(255, 255, 255);
+  padding: 20px 0 10px; /* Reducido significativamente */
+  width: 100%;
+  margin-top: auto; 
+}
+
+.contact-info {
+  /* Flexbox horizontal para elementos compactos */
+  display: flex;
+  flex-direction: row; /* Cambio principal: horizontal */
+  justify-content: space-between; /* Distribuye uniformemente */
+  align-items: flex-start; /* Alineación superior para mantener la línea */
+  flex-wrap: nowrap; /* No permite que se envuelvan - fuerza una fila */
+  gap: 10px; /* Espacio reducido entre elementos */
+}
+
+.contact-item {
+  display: flex;
+  flex-direction: column; /* Los iconos y textos verticalmente */
+  align-items: center; /* Centra cada elemento */
+  text-align: center;
+  flex: 1; /* Cada elemento ocupa exactamente el mismo espacio */
+  min-width: 0; /* Permite que se compriman si es necesario */
+  gap: 6px; /* Espacio entre icono y texto */
+  height: auto; /* Altura automática pero controlada */
+}
+
+.contact-icon {
+  width: 35px; /* Iconos más pequeños */
+  height: 35px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem; /* Tamaño de icono reducido */
+  flex-shrink: 0;
+}
+
+.contact-details h5 {
+  font-weight: 600;
+  margin-bottom: 2px; /* Espacio reducido */
+  color: white;
+  font-size: 0.85rem; /* Título más pequeño */
+  white-space: nowrap; /* Evita que el título se rompa en líneas */
+}
+
+.contact-details p {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.7rem; /* Texto más pequeño */
+  line-height: 1.2;
+  text-align: center; /* Asegura centrado */
+}
+
+/* Estilos para los enlaces sociales más compactos */
+.social-links {
+  display: flex;
+  gap: 6px; /* Espacio reducido entre iconos sociales */
+  justify-content: center;
+  margin-top: 2px; /* Pequeño margen para alineación */
+}
+
+.social-links a {
+  color: white;
+  font-size: 0.9rem; /* Iconos sociales más pequeños */
+  transition: all 0.2s ease;
+  padding: 2px; /* Pequeño padding para área de click */
+}
+
+.social-links a:hover {
+  color: #fdbb2d;
+  transform: translateY(-1px); /* Efecto hover más sutil */
+}
+
+/* Línea de copyright más compacta */
+.copyright {
+  font-size: 0.7rem; /* Texto aún más pequeño */
+  padding-top: 10px; /* Padding reducido */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 15px; /* Margen reducido */
+}
+
+/* Títulos de sección más compactos para el footer */
+.contact-footer .section-title {
+  font-size: 1.2rem; /* Título principal más pequeño */
+  margin-bottom: 0.3rem;
+}
+
+.contact-footer .section-subtitle {
+  font-size: 0.8rem; /* Subtítulo más pequeño */
+  margin-bottom: 1rem; /* Menos espacio debajo */
+}
+
+/* Responsive - mantiene los 4 elementos en una fila hasta tamaños muy pequeños */
+@media (max-width: 768px) {
+  .contact-footer {
+    padding: 15px 0 8px; /* Aún más compacto en móvil */
+  }
+  
+  .contact-info {
+    flex-wrap: wrap; /* Solo en móvil permite envolvimiento */
+    gap: 8px;
+  }
+  
+  .contact-item {
+    min-width: 120px; /* Ancho mínimo más pequeño en móvil */
+    gap: 4px;
+  }
+  
+  .contact-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  
+  .contact-details h5 {
+    font-size: 0.75rem;
+  }
+  
+  .contact-details p {
+    font-size: 0.65rem;
+  }
+  
+  .social-links a {
+    font-size: 0.8rem;
+  }
+  
+  .contact-footer .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .contact-footer .section-subtitle {
+    font-size: 0.75rem;
+  }
+}
+
+/* Para pantallas MUY pequeñas (menos de 480px) - solo entonces va vertical */
+@media (max-width: 480px) {
+  .contact-info {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .contact-item {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Para pantallas muy grandes, limita el ancho máximo */
+@media (min-width: 1200px) {
+  .contact-info {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}/* Responsive */
+@media (max-width: 768px) {
+  .contact-footer {
+    padding: 30px 0 15px;
+  }
+  
+  .contact-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .contact-icon {
+    align-self: center;
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .social-links {
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .social-links a {
+    font-size: 1.1rem;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .section-subtitle {
+    font-size: 0.85rem;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-container {
+    padding-top: 70px;
+  }
+  
+  .hero-section {
+    margin-top: -70px;
+  }
+  
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-content p {
+    font-size: 1.2rem;
+  }
+}
