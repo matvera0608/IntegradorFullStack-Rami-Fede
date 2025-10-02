@@ -47,7 +47,7 @@ const Login = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: formData.username, // o username según tu API
+                    email: formData.username,
                     password: formData.password
                 })
             });
@@ -64,7 +64,6 @@ const Login = () => {
             } 
             else 
             {
-                // Si hay error en el login
                 setError(data.message || 'Error en las credenciales');
             }
         } catch (error) 
@@ -77,59 +76,65 @@ const Login = () => {
     };
 
     return (
-        <div className="login-page"> {/* WRAPPER PRINCIPAL - esto es clave */}
+        <div className="login-page">
             <div className="login-container">
                 <div className="login-header">
                     <h1>Iniciar Sesión</h1>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="login-form">
                     {error && (
-                        <div className="alert alert-danger mb-3">
+                        <div className="login-alert login-alert-danger login-mb-3">
                             {error}
                         </div>
                     )}
-                    <div className="input-group mb-3">
+                    <div className="login-input-group login-mb-3">
                         <input 
                             type="email" 
-                            id="username" 
+                            id="login-username" 
                             name="username" 
                             required 
                             placeholder="Correo electrónico"
                             value={formData.username} 
-                            onChange={handleChange}               
+                            onChange={handleChange}
+                            className="login-input"
                         />
                     </div>
 
-                    <div className="input-group mb-3">
+                    <div className="login-input-group login-mb-3">
                         <input 
                             type="password" 
-                            id="password" 
+                            id="login-password" 
                             name="password" 
                             required 
                             placeholder="Contraseña"
                             value={formData.password}             
-                            onChange={handleChange}               // 👈 vincular
+                            onChange={handleChange}
+                            className="login-input"
                         />
                     </div>
 
-                    <button type="submit" id="login-button" className="btn btn-primary w-100 mb-3">
+                    <button 
+                        type="submit" 
+                        id="login-button" 
+                        className="login-btn login-btn-primary login-w-100 login-mb-3"
+                    >
                         Iniciar Sesión
                     </button>
                 </form>
                 
                 <div className="login-footer">
-                    <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
+                    <a href="#" className="login-forgot-password">¿Olvidaste tu contraseña?</a>
                 </div>
             </div>
             
-            <footer className="footer">
-                <div className="container">
-                    <span>&copy; 2025 Hotel Paradise. Todos los derechos reservados.</span>
-                    <div className="footer-links">
-                        <a href="#">Ayuda</a>
-                        <a href="#">Contacto</a>
-                        <a href="#">Términos</a>
+            <footer className="login-footer-bottom">
+                <div className="login-footer-container">
+                    <span className="login-footer-copyright">&copy; 2025 Hotel Paradise. Todos los derechos reservados.</span>
+                    <div className="login-footer-links">
+                        <a href="#" className="login-footer-link">Ayuda</a>
+                        <a href="#" className="login-footer-link">Contacto</a>
+                        <a href="#" className="login-footer-link">Términos</a>
                     </div>
                 </div>
             </footer>

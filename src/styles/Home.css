@@ -1,53 +1,194 @@
-body {
-  overflow-x: hidden; /* Oculta el scroll horizontal */
-  width: 100%; /* Asegura que ocupe todo el ancho */
-  overflow-y: auto; /* Permite el scroll vertical */
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Quitar cualquier fondo de la página */
 html, body {
- background-color: #f0e0d6 !important;
-  background-image: none !important;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Contenedor principal */
 .home-container {
-  padding-top: 0.5rem; /* Ajusta según la altura de tu navbar */
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-top: 0.5rem;
 }
-.titulo{
+
+@media (min-width: 576px) {
+  .home-container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .home-container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .home-container {
+    max-width: 1140px;
+  }
+}
+
+.main-content {
+  flex: 1 0 auto;
+}
+
+/* Sistema de Grid */
+.home-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+.home-col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+.home-col-lg-4,
+.home-col-md-6 {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+@media (min-width: 768px) {
+  .home-col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  
+  .home-col-md-10 {
+    flex: 0 0 83.333333%;
+    max-width: 83.333333%;
+  }
+}
+
+@media (min-width: 992px) {
+  .home-col-lg-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+  
+  .home-col-lg-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+  }
+}
+
+/* Utilidades de espaciado */
+.home-text-center {
+  text-align: center;
+}
+
+.home-mb-5 {
+  margin-bottom: 3rem;
+}
+
+.home-mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.home-g-4 > * {
+  padding: 1rem;
+}
+
+.home-justify-content-center {
+  justify-content: center;
+}
+
+/* Utilidades de color */
+.home-text-white {
+  color: #ffffff !important;
+}
+
+.home-text-white-50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.text-primary {
+  color: #0d6efd;
+}
+
+/* Hero Section */
+.home-section-header {
   margin-top: 4rem;
 }
+
 .hero-section {
   height: 100vh;
-  background: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0.5)), 
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
               url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.auto&auto=format&fit=crop&w=1600&h=800') center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: rgb(0, 0, 0);
-  margin-top: -80px; /* Compensa el padding del contenedor */
+  color: #ffffff;
+  margin-top: -80px;
 }
 
 .hero-content h1 {
   font-size: 3.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
+  color: #ffffff;
 }
 
 .hero-content p {
   font-size: 1.5rem;
   margin-bottom: 2rem;
+  color: #ffffff;
 }
 
-.services-section,
-.gallery-section,
-.testimonials-section,
+/* Secciones generales */
+.home-services-section,
+.home-gallery-section,
+.home-testimonials-section,
 .contact-section {
   padding: 80px 0;
 }
 
+/* Títulos de sección */
+.home-section-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #1a2a6c;
+}
 
-/* Estilos para las tarjetas de servicio */
-.services-container {
+.home-section-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+/* ========== SERVICIOS ========== */
+.home-services-grid {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -56,32 +197,27 @@ html, body {
   max-width: 1200px;
 }
 
-.service-card {
-  background: rgb(255, 255, 255);
+.home-service-card {
+  background: #ffffff;
   border-radius: 10px;
   padding: 30px;
   text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.172);
-  transition: transform 0.3s ease;
-  width: 200px;
-  height: 300px; /* 👈 alto fijo */
-
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 300px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  
-  width: 300px;       /* 👈 ancho fijo */
-  /* o flex: 1 1 300px; para responsive */
 }
 
-.service-card:hover {
+.home-service-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-
-/* Estilos para los iconos de servicio */
-.service-icon {
+.home-service-icon {
   width: 80px;
   height: 80px;
   margin: 0 auto 20px;
@@ -92,48 +228,56 @@ html, body {
   font-size: 2rem;
 }
 
-.luxury-icon {
-  background-color: #ffdd00;
-  color: rgb(255, 255, 255);
+.home-luxury-icon {
+  background-color: #ffd700;
+  color: #ffffff;
 }
 
-.location-icon {
+.home-location-icon {
   background-color: #0000ff;
-  color: rgb(255, 255, 255);
+  color: #ffffff;
 }
 
-.dining-icon {
+.home-dining-icon {
   background-color: #ff4500;
-  color: rgb(255, 255, 255);
+  color: #ffffff;
 }
 
-/* Estilos para los títulos y párrafos */
-.service-card h4 {
+.home-service-card h4 {
   margin-top: 0;
   margin-bottom: 15px;
   color: #1a2a6c;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-.service-card p {
+.home-service-card p {
   margin-bottom: 0;
   color: #3a3a3a;
+  line-height: 1.6;
+  font-size: 0.95rem;
 }
 
-/* Estilos para la galería */
-.gallery-section {
-    background: linear-gradient(135deg, #1a2a6c, #b21f1f);
-    color: rgb(255, 255, 255);
+/* ========== GALERÍA ========== */
+.home-gallery-section {
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+  color: #ffffff;
 }
 
-.gallery-item {
+.home-gallery-section .home-section-title {
+  color: #ffffff;
+}
+
+.home-gallery-item {
   position: relative;
   height: 300px;
   background-color: #ddd;
   border-radius: 10px;
   overflow: hidden;
+  cursor: pointer;
 }
 
-.gallery-placeholder {
+.home-gallery-image {
   height: 100%;
   display: flex;
   align-items: center;
@@ -141,279 +285,218 @@ html, body {
   background-color: #ffffff;
 }
 
-.gallery-overlay {
+.home-gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-gallery-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 40, 0.899));
-  color: rgb(255, 255, 255);
-  padding: 10px;
+  background: linear-gradient(transparent, rgba(0, 0, 40, 0.9));
+  color: #ffffff;
+  padding: 20px;
   opacity: 0;
-  transition: opacity 0.55s ease;
+  transition: opacity 0.3s ease;
 }
 
-.gallery-item:hover .gallery-overlay {
+.home-gallery-item:hover .home-gallery-overlay {
   opacity: 1;
 }
 
-/* Estilos para testimonios */
-.testimonial-card {
-  background: rgb(253, 253, 253);
+.home-gallery-overlay h5 {
+  margin: 0 0 5px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.home-gallery-overlay p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ========== TESTIMONIOS ========== */
+.home-testimonials-section {
+  background-color: #f8f9fa;
+}
+
+.home-testimonial-card {
+  background: #ffffff;
   border-radius: 10px;
-  padding: 40px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.779);
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   height: 100%;
-  transform: translateY(0);
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.testimonial-rating {
-  color: #ffff00;
+.home-testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.home-testimonial-rating {
+  color: #ffd700;
   margin-bottom: 15px;
-  font-size: 2rem;
+  font-size: 1.2rem;
 }
 
-.testimonial-author {
+.home-testimonial-rating i {
+  margin-right: 3px;
+}
+
+.home-testimonial-text {
+  flex: 1;
+  color: #333;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+
+.home-testimonial-author {
   display: flex;
   align-items: center;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
 }
 
-.author-image {
+.home-author-image {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #ffffff;
+  background-color: #f0f0f0;
   margin-right: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-/* Asegurar que el cuerpo ocupe toda la altura */
-html, body {
-  height: 100%;
+  flex-shrink: 0;
 }
 
-body {
+.home-author-image i {
+  font-size: 2.5rem;
+}
+
+.home-author-info h6 {
+  margin: 0 0 3px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a2a6c;
+}
+
+.home-author-info small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ========== FOOTER / CONTACTO ========== */
+.home-contact-footer {
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+  color: #ffffff;
+  padding: 40px 0 20px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.home-contact-footer .home-section-title {
+  color: #ffffff;
+  font-size: 2rem;
+}
+
+.home-contact-info {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  gap: 30px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-/* Contenedor principal debe expandirse */
-.main-content {
-  flex: 1 0 auto;
-}
-
-/* Títulos más compactos */
-.section-title {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.section-subtitle {
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-}
-/* Estilos para los elementos de contacto - footer compacto */
-.contact-footer {
-  background: linear-gradient(135deg, #1a2a6c, #b21f1f);
-  color: rgb(255, 255, 255);
-  padding: 20px 0 10px; /* Reducido significativamente */
-  width: 100%;
-  margin-top: auto; 
-}
-
-.contact-info {
-  /* Flexbox horizontal para elementos compactos */
+.home-contact-item {
   display: flex;
-  flex-direction: row; /* Cambio principal: horizontal */
-  justify-content: space-between; /* Distribuye uniformemente */
-  align-items: flex-start; /* Alineación superior para mantener la línea */
-  flex-wrap: nowrap; /* No permite que se envuelvan - fuerza una fila */
-  gap: 10px; /* Espacio reducido entre elementos */
+  align-items: flex-start;
+  gap: 20px;
 }
 
-.contact-item {
-  display: flex;
-  flex-direction: column; /* Los iconos y textos verticalmente */
-  align-items: center; /* Centra cada elemento */
-  text-align: center;
-  flex: 1; /* Cada elemento ocupa exactamente el mismo espacio */
-  min-width: 0; /* Permite que se compriman si es necesario */
-  gap: 6px; /* Espacio entre icono y texto */
-  height: auto; /* Altura automática pero controlada */
-}
-
-.contact-icon {
-  width: 35px; /* Iconos más pequeños */
-  height: 35px;
+.home-contact-icon {
+  width: 50px;
+  height: 50px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem; /* Tamaño de icono reducido */
+  font-size: 1.2rem;
   flex-shrink: 0;
+  color: #ffffff;
 }
 
-.contact-details h5 {
+.home-contact-details {
+  flex: 1;
+}
+
+.home-contact-details h5 {
   font-weight: 600;
-  margin-bottom: 2px; /* Espacio reducido */
-  color: white;
-  font-size: 0.85rem; /* Título más pequeño */
-  white-space: nowrap; /* Evita que el título se rompa en líneas */
+  margin-bottom: 8px;
+  color: #ffffff;
+  font-size: 1.1rem;
 }
 
-.contact-details p {
+.home-contact-details p {
   margin-bottom: 0;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 0.7rem; /* Texto más pequeño */
-  line-height: 1.2;
-  text-align: center; /* Asegura centrado */
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-/* Estilos para los enlaces sociales más compactos */
-.social-links {
+.home-social-links {
   display: flex;
-  gap: 6px; /* Espacio reducido entre iconos sociales */
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.home-social-links a {
+  color: #ffffff;
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  margin-top: 2px; /* Pequeño margen para alineación */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  text-decoration: none;
 }
 
-.social-links a {
-  color: white;
-  font-size: 0.9rem; /* Iconos sociales más pequeños */
-  transition: all 0.2s ease;
-  padding: 2px; /* Pequeño padding para área de click */
+.home-social-links a:hover {
+  color: #ffd700;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
 }
 
-.social-links a:hover {
-  color: #fdbb2d;
-  transform: translateY(-1px); /* Efecto hover más sutil */
-}
-
-/* Línea de copyright más compacta */
-.copyright {
-  font-size: 0.7rem; /* Texto aún más pequeño */
-  padding-top: 10px; /* Padding reducido */
+.home-copyright {
+  font-size: 0.85rem;
+  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  margin-top: 15px; /* Margen reducido */
+  margin-top: 30px;
+  text-align: center;
 }
 
-/* Títulos de sección más compactos para el footer */
-.contact-footer .section-title {
-  font-size: 1.2rem; /* Título principal más pequeño */
-  margin-bottom: 0.3rem;
-}
-
-.contact-footer .section-subtitle {
-  font-size: 0.8rem; /* Subtítulo más pequeño */
-  margin-bottom: 1rem; /* Menos espacio debajo */
-}
-
-/* Responsive - mantiene los 4 elementos en una fila hasta tamaños muy pequeños */
-@media (max-width: 768px) {
-  .contact-footer {
-    padding: 15px 0 8px; /* Aún más compacto en móvil */
+/* ========== RESPONSIVE ========== */
+@media (max-width: 992px) {
+  .home-services-grid {
+    gap: 20px;
   }
   
-  .contact-info {
-    flex-wrap: wrap; /* Solo en móvil permite envolvimiento */
-    gap: 8px;
-  }
-  
-  .contact-item {
-    min-width: 120px; /* Ancho mínimo más pequeño en móvil */
-    gap: 4px;
-  }
-  
-  .contact-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
-  }
-  
-  .contact-details h5 {
-    font-size: 0.75rem;
-  }
-  
-  .contact-details p {
-    font-size: 0.65rem;
-  }
-  
-  .social-links a {
-    font-size: 0.8rem;
-  }
-  
-  .contact-footer .section-title {
-    font-size: 1.1rem;
-  }
-  
-  .contact-footer .section-subtitle {
-    font-size: 0.75rem;
+  .home-service-card {
+    width: 280px;
   }
 }
 
-/* Para pantallas MUY pequeñas (menos de 480px) - solo entonces va vertical */
-@media (max-width: 480px) {
-  .contact-info {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .contact-item {
-    width: 100%;
-    max-width: 300px;
-  }
-}
-
-/* Para pantallas muy grandes, limita el ancho máximo */
-@media (min-width: 1200px) {
-  .contact-info {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-}/* Responsive */
-@media (max-width: 768px) {
-  .contact-footer {
-    padding: 30px 0 15px;
-  }
-  
-  .contact-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 8px;
-  }
-  
-  .contact-icon {
-    align-self: center;
-    width: 35px;
-    height: 35px;
-    font-size: 0.9rem;
-  }
-  
-  .social-links {
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .social-links a {
-    font-size: 1.1rem;
-  }
-  
-  .section-title {
-    font-size: 1.3rem;
-  }
-  
-  .section-subtitle {
-    font-size: 0.85rem;
-  }
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .home-container {
     padding-top: 70px;
@@ -421,6 +504,7 @@ body {
   
   .hero-section {
     margin-top: -70px;
+    height: 80vh;
   }
   
   .hero-content h1 {
@@ -429,5 +513,82 @@ body {
   
   .hero-content p {
     font-size: 1.2rem;
+  }
+  
+  .home-section-title {
+    font-size: 2rem;
+  }
+  
+  .home-section-subtitle {
+    font-size: 1rem;
+  }
+  
+  .home-services-section,
+  .home-gallery-section,
+  .home-testimonials-section,
+  .contact-section {
+    padding: 60px 0;
+  }
+  
+  .home-services-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .home-service-card {
+    width: 100%;
+    max-width: 350px;
+  }
+  
+  .home-contact-item {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+  
+  .home-contact-details {
+    text-align: center;
+  }
+  
+  .home-social-links {
+    justify-content: center;
+  }
+  
+  .home-gallery-item {
+    height: 250px;
+  }
+  
+  .home-contact-footer {
+    padding: 30px 0 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-content p {
+    font-size: 1rem;
+  }
+  
+  .home-section-title {
+    font-size: 1.75rem;
+  }
+  
+  .home-section-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .home-service-card {
+    padding: 25px;
+  }
+  
+  .home-testimonial-card {
+    padding: 25px;
+  }
+  
+  .home-contact-footer {
+    padding: 30px 0 15px;
   }
 }
