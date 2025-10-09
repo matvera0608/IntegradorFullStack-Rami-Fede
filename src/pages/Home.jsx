@@ -9,7 +9,7 @@ function Home() {
         <div className="home-container">
           <div className="home-section-header">
             <div className="home-col-12 home-text-center home-mb-5">
-              <h2 className="home-section-title">¿Por qué elegir Hotel home?</h2>
+              <h2 className="home-section-title">¿Por qué elegir Hotel Paradise?</h2>
               <p className="home-section-subtitle">Descubre las características que nos hacen únicos</p>
             </div>
           </div>

@@ -6,8 +6,7 @@ import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Menu from './pages/menuPrincipal';
 import CreateUser from './pages/createUser';
-
-
+import Reservation from './pages/Reservation';
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +17,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Menu />} />
           <Route path="/register" element={<CreateUser />} />
+          <Route path="/reservations" element={<Reservation />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

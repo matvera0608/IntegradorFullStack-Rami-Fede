@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
-
+import { Link } from 'react-router-dom';
 const Login = () => {
     const [formData, setFormData] = useState({
         username: '',
@@ -126,6 +126,12 @@ const Login = () => {
                 <div className="login-footer">
                     <a href="#" className="login-forgot-password">¿Olvidaste tu contraseña?</a>
                 </div>
+                 <div className="login-footer">
+                    <Link to="/register" className="login-forgot-password ">
+                    ¿No tienes cuenta? Regístrate Aquí.
+                </Link>
+                </div>
+                
             </div>
             
             <footer className="login-footer-bottom">

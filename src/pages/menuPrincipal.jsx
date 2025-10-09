@@ -1,7 +1,11 @@
 import React from 'react';
 import '../styles/menuPrincipal.css';
-
+import { useNavigate } from 'react-router-dom';
 function menuPrincipal() {
+  const navigate = useNavigate();
+  const handleReservar = () => {
+    navigate('/reservations');
+  }
   return (
     <>
       <div className="menu-container">
@@ -21,7 +25,7 @@ function menuPrincipal() {
                   </div>
                   <h4 className="menu-card-title">Reservar Habitación</h4>
                   <p className="menu-card-text">Encuentra la habitación perfecta para tu estadía</p>
-                  <button className="menu-btn menu-btn-primary menu-btn-lg">
+                  <button className="menu-btn menu-btn-primary menu-btn-lg" onClick={() => handleReservar()}>
                     <i className="fas fa-calendar-plus menu-me-2"></i>Reservar Ahora
                   </button>
                 </div>
