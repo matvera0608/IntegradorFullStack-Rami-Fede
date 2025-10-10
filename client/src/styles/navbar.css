@@ -1,0 +1,41 @@
+/* Reducir altura navbar */
+.navbar {
+  padding-top: 0.25rem; /* antes ~0.5rem */
+  padding-bottom: 0.25rem;
+  min-height: 40px; /* opcional: forzar alto mínimo */
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+}
+
+/* Reducir altura de los enlaces */
+.navbar .nav-link {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.85rem; /* texto más chico */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Ajustar íconos */
+.navbar .nav-link i {
+  font-size: 1rem; /* antes .fs-2 era 2rem */
+}
+
+/* Ajustar brand/logo */
+.navbar-brand {
+  font-size: 1rem; /* reduce texto */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar-brand i {
+  font-size: 1.5rem !important; /* icono del logo más chico */
+}
+
+/* Quitar márgenes del <p> dentro de nav-link */
+.navbar .nav-link p {
+  margin: 0;
+  font-size: 0.85rem;
+  display: inline; /* para que no cree bloques */
+}

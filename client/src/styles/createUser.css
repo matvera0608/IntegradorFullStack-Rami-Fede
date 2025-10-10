@@ -1,0 +1,246 @@
+/* Reset para el componente */
+
+
+
+/* Container principal */
+.create-container {
+    background: white;
+    border: 2px solid rgb(200, 200, 200);
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 450px;
+    width: 90%;
+    margin: 100px auto 120px auto;
+    margin-top: 1rem;
+}
+
+/* Título */
+.create-title {
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 24px;
+}
+
+/* Subtítulo */
+.create-subtitle {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+/* Formulario */
+.create-form {
+    width: 100%;
+}
+
+/* Grupo de formulario */
+.create-form-group {
+    margin-bottom: 15px;
+}
+
+/* Label */
+.create-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Campo requerido */
+.create-required {
+    color: #e74c3c;
+}
+
+/* Inputs */
+.create-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.create-input:focus,
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.create-input.error,
+input.error {
+    border-color: #e74c3c;
+}
+
+/* Mensaje de error */
+.create-error-message {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.create-error-message.show {
+    display: block;
+}
+
+/* Password toggle */
+.create-password-toggle {
+    position: relative;
+}
+
+.create-toggle-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 12px;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.create-toggle-btn:hover {
+    color: #333;
+}
+
+/* Botón submit */
+.create-btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 8px;
+}
+
+.create-btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.create-btn-submit:active {
+    transform: translateY(0);
+}
+
+/* Texto informativo */
+.create-info-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Mensaje de éxito */
+.create-success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+
+/* Footer */
+.create-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.create-footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.create-footer-copyright {
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.create-footer-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.create-footer-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.create-footer-link:hover {
+    color: #764ba2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .create-container {
+        padding: 30px 20px;
+        margin: 1rem;
+    }
+    
+    .create-title {
+        font-size: 24px;
+    }
+    
+    .create-subtitle {
+        font-size: 13px;
+    }
+    
+    .create-footer-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .create-footer-links {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .create-container {
+        padding: 20px 15px;
+    }
+    
+    .create-title {
+        font-size: 22px;
+    }
+    
+    .create-btn-submit {
+        padding: 12px;
+        font-size: 15px;
+    }
+    
+    .create-footer {
+        padding: 1rem;
+    }
+}
