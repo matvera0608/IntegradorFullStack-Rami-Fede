@@ -7,6 +7,8 @@ import NotFound from './pages/NotFound';
 import Menu from './pages/menuPrincipal';
 import CreateUser from './pages/createUser';
 import Reservation from './pages/Reservation';
+import ReservationManager from './pages/ReservationsMagnament'; 
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +20,7 @@ function App() {
           <Route path="/home" element={<Menu />} />
           <Route path="/register" element={<CreateUser />} />
           <Route path="/reservations" element={<Reservation />} />
+          <Route path="/admin" element={<ReservationManager />} />            
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

@@ -1,10 +1,12 @@
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { Router } from 'express';
-import { createReservation, getReservations, updateReservation, deleteReservation } from '../controllers/reservations.controller.js';
+import { createReservation, getReservations, updateReservation, deleteReservation, getActiveReservationsController } from '../controllers/reservations.controller.js';
 import { validateCreateReservation, validateReservationId } from '../middleware/reservations.middleware.js';
 
 const router = Router();
 
+// Backend - GET /api/reservations/active
+router.get('/active', getActiveReservationsController)
 // POST /reservations → Crear reserva
 router.post('/booking', authMiddleware, validateCreateReservation, createReservation);
 

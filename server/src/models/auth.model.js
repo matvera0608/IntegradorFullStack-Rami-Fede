@@ -16,7 +16,7 @@ export const registrarUsuario = async (username, email, password) => {
 
 export const findByMail = async (mail) => {
   try {
-    const consulta = `SELECT nombre, correoElectronico, contrasena, ID FROM usuario WHERE correoElectronico = ?`;
+    const consulta = `SELECT nombre, correoElectronico, contrasena, ID, rol FROM usuario WHERE correoElectronico = ?`;
     const [rows] = await db.execute(consulta, [mail]);
 
      // Si no hay resultados, devolver null

@@ -61,3 +61,27 @@ export const cancelReservationByIds = async (IDUsuario, IDHabitacion) => {
     throw error;
   }
 };
+
+// Traer todas las reservas activas
+export const getActiveReservations = async () => {
+    try {
+        const [rows] = await db.query(
+            `SELECT 
+                IDReserva as id,
+                fechaIngreso,
+                fechaEgreso,
+                estado,
+                IDUsuario,
+                IDHabitacion,
+                precio
+             FROM reservas 
+             WHERE estado = 'activo'
+             AND fechaEgreso >= CURDATE()
+             ORDER BY fechaIngreso ASC`
+        );
+        return rows;
+    } catch (error) {
+        console.error("Error al obtener reservas activas:", error);
+        throw error;
+    }
+};

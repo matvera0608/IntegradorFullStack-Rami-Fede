@@ -1,8 +1,22 @@
-import React from 'react';
 import '../styles/menuPrincipal.css';
 import { useNavigate } from 'react-router-dom';
-function menuPrincipal() {
-  const navigate = useNavigate();
+import  { React, useEffect, useState } from 'react';
+const menuPrincipal = () => {
+   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true); 
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login'); 
+    } else {
+      setLoading(false); // hay token → permitir renderizado
+    }
+  }, [navigate]);
+
+  if (loading) {
+    return null; // 👈 no renderiza nada hasta que sepamos si hay token
+  }
   const handleReservar = () => {
     navigate('/reservations');
   }

@@ -46,7 +46,7 @@ const login = async (req, res) => {
       if (!passwordMatch) {
         return res.status(403).json({ message: 'Contraseña incorrecta' });
       }
-      const payload = { id: usuario.ID, nombre: usuario.nombre, mail: usuario.mail };
+      const payload = { id: usuario.ID, nombre: usuario.nombre, mail: usuario.mail, rol: usuario.rol };
      const token = jwt.sign(payload, process.env.SECRET_KEY, { 
         expiresIn: process.env.TOKEN_EXPIRATION || '24h', 
       });

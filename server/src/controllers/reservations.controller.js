@@ -1,8 +1,9 @@
+import { AllRooms } from "../models/room.model.js";
 import {
   insertReservation,
   getAllReservations,
   updateReservationByIds,
-  cancelReservationByIds
+  cancelReservationByIds,getActiveReservations,
 } from "../models/reservations.model.js";
 
 /// Crear reserva
@@ -122,4 +123,37 @@ export const deleteReservation = async (req, res) => {
       error: error.message
     });
   }
+};
+
+export const getActiveReservationsController = async (req, res) => {
+    console.log('🔵 GET /api/reservations/active - Obteniendo reservas activas');
+    try {
+        const reservations = await getActiveReservations();
+        console.log('📊 Reservas activas encontradas:', reservations.length);
+        
+        if (reservations.length > 0) {
+            console.log('📋 Ejemplo de reserva:', reservations[0]);
+        }
+        
+        // Formatear la respuesta según el formato requerido por el frontend
+        const response = {
+            reservas: reservations.map(reserva => ({
+                IDReserva: reserva.id,
+                fechaIngreso: reserva.fechaIngreso,
+                fechaEgreso: reserva.fechaEgreso,
+                estado: reserva.estado,
+                precio: reserva.precio,
+                IDHabitacion: reserva.IDHabitacion,
+                IDUsuario: reserva.IDUsuario
+            }))
+        };
+        
+        res.json(response);
+    } catch (error) {
+        console.error('❌ Error en getActiveReservationsController:', error);
+        res.status(500).json({ 
+            message: "Error al obtener reservas activas", 
+            error: error.message 
+        });
+    }
 };
