@@ -9,4 +9,8 @@ Este proyecto es un sistema completo para la gestión de un hotel, incluyendo:
 6. Además se hizo con el fin de mostrar nuestra primer API Rest.
 
 Pero una diferencia sutil es que ese sistema simple estará incluido en react.
-Este proyecto es similar a lo que hicimos con backend pero esta vez será con versión de react
+Este proyecto es similar a lo que hicimos con backend pero esta vez será con versión de react.
+
+MEJORAS PUESTAS:
+
+Este proyecto cuenta como un trabajo final, porque incluye una base de datos + backend a parte del frontend.
