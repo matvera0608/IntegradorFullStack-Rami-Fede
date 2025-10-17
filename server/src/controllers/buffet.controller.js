@@ -10,6 +10,7 @@ import {
 const getCatalog = async (req, res) => {
     try {
         const catalog = await AllBuffet();
+        console.log(catalog);
         res.json({ message: "Catálogo completo", catalog });
     } catch (error) {
         res.status(500).json({ message: "Error al obtener el catálogo", error: error.message });

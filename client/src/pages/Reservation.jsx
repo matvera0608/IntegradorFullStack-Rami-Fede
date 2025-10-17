@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Reservation.css';
 import { useRooms } from '../hooks/useRooms';
@@ -8,6 +8,8 @@ import {
     calcularFechasSugeridaConCapacidad,
     obtenerEstadisticasOcupacion 
 } from '../utils/reservationUtils';
+import { validarPuedeReservar } from '../utils/ReserveActive';
+import { formatearFecha } from '../utils/formatDate';
 
 // Constante: Capacidad total de habitaciones por tipo
 const CAPACIDAD_TOTAL = 10;
@@ -36,6 +38,11 @@ const Reservation = () => {
     const { user, loading: authLoading } = useAuth();
 
     const [selectedRoom, setSelectedRoom] = useState(null);
+    const [puedeReservar, setPuedeReservar] = useState(true);
+    const [mensajeBloqueo, setMensajeBloqueo] = useState('');
+    const [reservaActual, setReservaActual] = useState(null);
+    const [validandoReserva, setValidandoReserva] = useState(true);
+    
     const [formData, setFormData] = useState({
         checkIn: '',
         checkOut: '',
@@ -50,7 +57,35 @@ const Reservation = () => {
         disponibles: CAPACIDAD_TOTAL
     });
     const formRef = useRef(null);
+    useEffect(() => {
+    const verificarEstadoReserva = async () => {
+        try {
+            setValidandoReserva(true);
+            console.log('🟡 Iniciando validación de reserva...');
+            
+            const validacion = await validarPuedeReservar(token);
+            
+            console.log('🟢 RESULTADO VALIDACIÓN:', {
+                puedeReservar: validacion.puedeReservar,
+                motivo: validacion.motivo,
+                reservaActual: validacion.reservaActual
+            });
+            
+            setPuedeReservar(validacion.puedeReservar);
+            setMensajeBloqueo(validacion.motivo);
+            setReservaActual(validacion.reservaActual);
 
+        } catch (error) {
+            console.error('🔴 Error al validar estado de reserva:', error);
+        } finally {
+            setValidandoReserva(false);
+        }
+    };
+
+    if (token) {
+        verificarEstadoReserva();
+    }
+}, [token]);
     // Función para manejar cambios en los inputs
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -61,6 +96,12 @@ const Reservation = () => {
     };
 
     const handleSeleccionar = (room) => {
+        // Verificar nuevamente antes de permitir seleccionar
+        if (!puedeReservar) {
+            alert(mensajeBloqueo);
+            return;
+        }
+
         console.log('═══════════════════════════════════════════');
         console.log(`🏨 Seleccionando habitación: ${room.type} (ID: ${room.id})`);
         console.log('═══════════════════════════════════════════');
@@ -97,22 +138,18 @@ const Reservation = () => {
             formRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 200);
     };
-
-    // Función para aplicar fechas sugeridas manualmente
-    const aplicarFechasSugeridas = () => {
-        setFormData(prev => ({
-            ...prev,
-            checkIn: fechasSugeridas.checkIn,
-            checkOut: fechasSugeridas.checkOut
-        }));
-    };
-
     const handleReserve = async (e) => {
         e.preventDefault();
 
         console.log('═══════════════════════════════════════════');
-        console.log('🔄 Iniciando proceso de reserva');
+        console.log('🚀 Iniciando proceso de reserva');
         console.log('═══════════════════════════════════════════');
+
+        // 🔒 VALIDACIÓN CRÍTICA: Verificar si puede reservar
+        if (!puedeReservar) {
+            alert(`❌ No puedes realizar esta reserva\n\n${mensajeBloqueo}`);
+            return;
+        }
 
         // Validar fechas básicas
         if (!formData.checkIn || !formData.checkOut) {
@@ -158,17 +195,6 @@ const Reservation = () => {
             return;
         }
 
-        // Mostrar confirmación con disponibilidad
-        const confirmacion = window.confirm(
-            `¿Confirmar reserva?\n\n` +
-            `🏨 Habitación: ${selectedRoom.type}\n` +
-            `📅 Check-In: ${formData.checkIn}\n` +
-            `📅 Check-Out: ${formData.checkOut}\n` +
-            `✅ Disponibilidad: ${validacion.disponibles}/${CAPACIDAD_TOTAL} habitaciones libres`
-        );
-
-        if (!confirmacion) return;
-
         try {
             const decodedToken = decodeToken(token);
             console.log('🔑 Token decodificado:', decodedToken);
@@ -183,7 +209,7 @@ const Reservation = () => {
             const reservationData = {
                 fechaIngreso: formData.checkIn,
                 fechaEgreso: formData.checkOut,
-                estado: 'activo',
+                estado: 'pendiente',
                 precio: precio,
                 IDHabitacion: selectedRoom.id,
                 IDUsuario: decodedToken.IDUsuario || decodedToken.id
@@ -207,7 +233,13 @@ const Reservation = () => {
             }
 
             console.log('✅ Reserva creada exitosamente:', result);
-            alert('¡Reserva creada exitosamente! 🎉');
+            alert(`¡Reserva creada exitosamente! 🎉\n\n` +
+                `📋 Detalles:\n` +
+                `🏨 Habitación: ${selectedRoom.type}\n` +
+                `📅 Check-In: ${formData.checkIn}\n` +
+                `📅 Check-Out: ${formData.checkOut}\n` +
+                `✅ Estado: Pendiente`
+            );
             
             // Recargar para actualizar disponibilidad
             window.location.reload();
@@ -219,7 +251,7 @@ const Reservation = () => {
     };
 
     // Mostrar estados de carga
-    if (loading || authLoading) {
+    if (loading || authLoading || validandoReserva) {
         return (
             <div className="reservation-page">
                 <div className="reservation-container">
@@ -252,6 +284,78 @@ const Reservation = () => {
                     <p className="reservation-subtitle">Elige la habitación perfecta para tu estadía</p>
                 </div>
             </section>
+
+            {/* ALERTA SI NO PUEDE RESERVAR - VERSIÓN COMPACTA */}
+        {!puedeReservar && reservaActual && (
+    <section className="reservation-blocked-section">
+        <div className="reservation-container">
+            <div style={{
+                backgroundColor: reservaActual.estado?.toLowerCase() === 'activo' ? '#f8d7da' : 
+                                reservaActual.estado?.toLowerCase() === 'pendiente' ? '#fff3cd' : '#d1ecf1',
+                border: `2px solid ${reservaActual.estado?.toLowerCase() === 'activo' ? '#dc3545' : 
+                            reservaActual.estado?.toLowerCase() === 'pendiente' ? '#ffc107' : '#bee5eb'}`,
+                borderRadius: '12px',
+                padding: '25px',
+                marginBottom: '30px',
+                textAlign: 'center'
+            }}>
+                <h2 style={{ 
+                    color: reservaActual.estado?.toLowerCase() === 'activo' ? '#721c24' : 
+                          reservaActual.estado?.toLowerCase() === 'pendiente' ? '#856404' : '#0c5460',
+                    marginBottom: '15px', 
+                    fontSize: '1.5em' 
+                }}>
+                    {reservaActual.estado?.toLowerCase() === 'activo' ? '🚫 No puedes realizar nuevas reservas' :
+                     reservaActual.estado?.toLowerCase() === 'pendiente' ? '⏳ Tienes una reserva pendiente de aprobación' :
+                     'ℹ️ Tienes una reserva en proceso'}
+                </h2>
+                
+                <p style={{ 
+                    color: reservaActual.estado?.toLowerCase() === 'activo' ? '#721c24' : 
+                          reservaActual.estado?.toLowerCase() === 'pendiente' ? '#856404' : '#0c5460',
+                    fontSize: '1.1em', 
+                    marginBottom: '15px' 
+                }}>
+                    {reservaActual.estado?.toLowerCase() === 'pendiente' 
+                        ? 'Tu reserva está en proceso de revisión. Una vez sea aprobada o rechazada, podrás realizar nuevas reservas.'
+                        : mensajeBloqueo
+                    }
+                </p>
+
+                <div style={{
+                    backgroundColor: 'white',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    marginTop: '15px'
+                }}>
+                    <h3 style={{ marginBottom: '10px' }}>
+                        📋 Reserva {reservaActual.estado?.toLowerCase() === 'pendiente' ? 'Pendiente' : 'Actual'}:
+                    </h3>
+                    <p><strong>🏨 Habitación ID:</strong> {reservaActual.IDHabitacion}</p>
+                    <p><strong>📅 Check-In:</strong> {formatearFecha(reservaActual.fechaIngreso)}</p>
+                    <p><strong>📅 Check-Out:</strong> {formatearFecha(reservaActual.fechaEgreso)}</p>
+                    <p><strong>💵 Precio:</strong> ${reservaActual.precio}</p>
+                    <p><strong>
+                        {reservaActual.estado?.toLowerCase() === 'pendiente' ? '⏳' : '✅'} Estado:
+                    </strong> {reservaActual.estado}</p>
+                </div>
+
+                {/* Información adicional solo para estado pendiente */}
+                {reservaActual.estado?.toLowerCase() === 'pendiente' && (
+                    <div style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: '#e2f0ff',
+                        borderRadius: '6px',
+                        fontSize: '0.9em'
+                    }}>
+                        <strong>💡 Información:</strong> Puedes contactar al administrador para conocer el estado de tu reserva.
+                    </div>
+                )}
+            </div>
+        </div>
+    </section>
+)}
 
             <section className="reservation-rooms-section">
                 <div className="reservation-container">
@@ -303,8 +407,13 @@ const Reservation = () => {
                                         <button 
                                             className="reservation-btn"
                                             onClick={() => handleSeleccionar(room)}
+                                            disabled={!puedeReservar}
+                                            style={{
+                                                opacity: puedeReservar ? 1 : 0.5,
+                                                cursor: puedeReservar ? 'pointer' : 'not-allowed'
+                                            }}
                                         >
-                                            Seleccionar Habitación
+                                            {puedeReservar ? 'Seleccionar Habitación' : 'No Disponible'}
                                         </button>
                                     </div>
                                 </div>
@@ -315,139 +424,120 @@ const Reservation = () => {
             </section>
 
             {/* FORMULARIO DE RESERVA */}
-            <section 
-                ref={formRef}
-                className={`reservation-form-section ${selectedRoom ? 'visible' : 'hidden'}`}
-            >
-                <div className="reservation-container">
-                    {selectedRoom && (
-                        <div className="reservation-form-container">
-                            <h2 className="reservation-form-title">
-                                Completa tu Reserva - Habitación {selectedRoom.type}
-                            </h2>
-                            
-                            {/* Alerta informativa con disponibilidad */}
-                            <div className="alert alert-info" style={{ 
-                                backgroundColor: fechasSugeridas.disponibles === 0 ? '#f8d7da' : '#d1ecf1',
-                                borderColor: fechasSugeridas.disponibles === 0 ? '#f5c6cb' : '#bee5eb',
-                                color: fechasSugeridas.disponibles === 0 ? '#721c24' : '#0c5460',
-                                padding: '15px',
-                                borderRadius: '8px',
-                                marginBottom: '20px',
-                                border: '1px solid'
-                            }}>
-                                <strong>📅 Fechas sugeridas:</strong> Del {fechasSugeridas.checkIn} al {fechasSugeridas.checkOut}
-                                <div style={{ marginTop: '8px', fontSize: '0.9em' }}>
-                                    {fechasSugeridas.mensaje}
-                                </div>
-                                <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
-                                    ✅ Disponibilidad: {fechasSugeridas.disponibles}/{CAPACIDAD_TOTAL} habitaciones libres
-                                </div>
-                            </div>
-                            
-                            <form className="reservation-form" onSubmit={handleReserve}>
-                                <div className="reservation-form-row">
-                                    <div className="reservation-form-group">
-                                        <label className="reservation-form-label">Fecha de Ingreso</label>
-                                        <input 
-                                            type="date" 
-                                            name="checkIn"
-                                            value={formData.checkIn}
-                                            onChange={handleInputChange}
-                                            className="reservation-form-input"
-                                            min={new Date().toISOString().split('T')[0]}
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="reservation-form-group">
-                                        <label className="reservation-form-label">Fecha de Egreso</label>
-                                        <input 
-                                            type="date" 
-                                            name="checkOut"
-                                            value={formData.checkOut}
-                                            onChange={handleInputChange}
-                                            className="reservation-form-input"
-                                            min={formData.checkIn || new Date().toISOString().split('T')[0]}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="reservation-form-row">
-                                    <div className="reservation-form-group">
-                                        <label className="reservation-form-label">Teléfono</label>
-                                        <input 
-                                            type="tel" 
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            className="reservation-form-input"
-                                            placeholder="+54 9 11 1234-5678"
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="reservation-form-group">
-                                        <label className="reservation-form-label">Número de Huéspedes</label>
-                                        <select 
-                                            name="guests"
-                                            value={formData.guests}
-                                            onChange={handleInputChange}
-                                            className="reservation-form-input" 
-                                            required
-                                        >
-                                            <option value="">Selecciona...</option>
-                                            <option value="1">1 Huésped</option>
-                                            <option value="2">2 Huéspedes</option>
-                                            <option value="3">3 Huéspedes</option>
-                                            <option value="4">4 Huéspedes</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="reservation-form-group">
-                                    <label className="reservation-form-label">Comentarios Adicionales</label>
-                                    <textarea 
-                                        name="comments"
-                                        value={formData.comments}
-                                        onChange={handleInputChange}
-                                        className="reservation-form-textarea"
-                                        placeholder="Solicitudes especiales, requerimientos, alergias, etc..."
-                                        rows="4"
-                                    />
-                                </div>
-
-                                <button 
-                                    type="submit" 
-                                    className="reservation-submit-btn"
-                                >
-                                    Confirmar Reserva
-                                </button>
+            {puedeReservar && (
+                <section 
+                    ref={formRef}
+                    className={`reservation-form-section ${selectedRoom ? 'visible' : 'hidden'}`}
+                >
+                    <div className="reservation-container">
+                        {selectedRoom && (
+                            <div className="reservation-form-container">
+                                <h2 className="reservation-form-title">
+                                    Completa tu Reserva - Habitación {selectedRoom.type}
+                                </h2>
                                 
-                                {/* Botón para re-aplicar fechas sugeridas */}
-                                <button 
-                                    type="button"
-                                    className="reservation-suggested-dates-btn"
-                                    onClick={aplicarFechasSugeridas}
-                                    style={{ 
-                                        marginTop: '10px',
-                                        backgroundColor: '#17a2b8',
-                                        color: 'white',
-                                        padding: '12px',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        width: '100%',
-                                        fontWeight: '500'
-                                    }}
-                                >
-                                    🔄 Restaurar Fechas Sugeridas ({fechasSugeridas.checkIn} - {fechasSugeridas.checkOut}) 
-                                    [{fechasSugeridas.disponibles}/{CAPACIDAD_TOTAL} disponibles]
-                                </button>
-                            </form>
-                        </div>
-                    )}
-                </div>
-            </section>
+                                {/* Alerta informativa con disponibilidad */}
+                                <div className="alert alert-info" style={{ 
+                                    backgroundColor: fechasSugeridas.disponibles === 0 ? '#f8d7da' : '#d1ecf1',
+                                    borderColor: fechasSugeridas.disponibles === 0 ? '#f5c6cb' : '#bee5eb',
+                                    color: fechasSugeridas.disponibles === 0 ? '#721c24' : '#0c5460',
+                                    padding: '15px',
+                                    borderRadius: '8px',
+                                    marginBottom: '20px',
+                                    border: '1px solid'
+                                }}>
+                                    <strong>📅 Fechas sugeridas:</strong> Del {fechasSugeridas.checkIn} al {fechasSugeridas.checkOut}
+                                    <div style={{ marginTop: '8px', fontSize: '0.9em' }}>
+                                        {fechasSugeridas.mensaje}
+                                    </div>
+                                    <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
+                                        ✅ Disponibilidad: {fechasSugeridas.disponibles}/{CAPACIDAD_TOTAL} habitaciones libres
+                                    </div>
+                                </div>
+                                
+                                <form className="reservation-form" onSubmit={handleReserve}>
+                                    <div className="reservation-form-row">
+                                        <div className="reservation-form-group">
+                                            <label className="reservation-form-label">Fecha de Ingreso</label>
+                                            <input 
+                                                type="date" 
+                                                name="checkIn"
+                                                value={formData.checkIn}
+                                                onChange={handleInputChange}
+                                                className="reservation-form-input"
+                                                min={new Date().toISOString().split('T')[0]}
+                                                required 
+                                            />
+                                        </div>
+                                        <div className="reservation-form-group">
+                                            <label className="reservation-form-label">Fecha de Egreso</label>
+                                            <input 
+                                                type="date" 
+                                                name="checkOut"
+                                                value={formData.checkOut}
+                                                onChange={handleInputChange}
+                                                className="reservation-form-input"
+                                                min={formData.checkIn || new Date().toISOString().split('T')[0]}
+                                                required 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="reservation-form-row">
+                                        <div className="reservation-form-group">
+                                            <label className="reservation-form-label">Teléfono</label>
+                                            <input 
+                                                type="tel" 
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                                className="reservation-form-input"
+                                                placeholder="+54 9 11 1234-5678"
+                                                required 
+                                            />
+                                        </div>
+                                        <div className="reservation-form-group">
+                                            <label className="reservation-form-label">Número de Huéspedes</label>
+                                            <select 
+                                                name="guests"
+                                                value={formData.guests}
+                                                onChange={handleInputChange}
+                                                className="reservation-form-input" 
+                                                required
+                                            >
+                                                <option value="">Selecciona...</option>
+                                                <option value="1">1 Huésped</option>
+                                                <option value="2">2 Huéspedes</option>
+                                                <option value="3">3 Huéspedes</option>
+                                                <option value="4">4 Huéspedes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="reservation-form-group">
+                                        <label className="reservation-form-label">Comentarios Adicionales</label>
+                                        <textarea 
+                                            name="comments"
+                                            value={formData.comments}
+                                            onChange={handleInputChange}
+                                            className="reservation-form-textarea"
+                                            placeholder="Solicitudes especiales, requerimientos, alergias, etc..."
+                                            rows="4"
+                                        />
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        className="reservation-submit-btn"
+                                    >
+                                        Confirmar Reserva
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
         </div>
     );
 };

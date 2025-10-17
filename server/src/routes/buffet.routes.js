@@ -6,15 +6,15 @@ const router = Router();
    
 //Publico
 //GET /buffet → Catálogo completo.
-router.get('/buffet', getCatalog);
+router.get('/catalog', getCatalog);
 //GET /buffet/:id → Detalles de un ítem.
-router.get('/buffet/:id', getCatalogByID);
+router.get('/catalog/:id', getCatalogByID);
 //Privado    
 //POST /buffet → Agregar plato/bebida.
-router.post('/buffet', authMiddleware,validarBuffet,createCatalog);
+router.post('/catalog', authMiddleware,validarBuffet,createCatalog);
 //PUT /buffet/:id → Editar plato/bebida.
-router.put('/buffet/:id',authMiddleware,validarBuffet, updateCatalog);
+router.put('/catalog/:id',authMiddleware,validarBuffet, updateCatalog);
 //DELETE /buffet/:id → Eliminar plato/bebida.
-router.delete('buffet/:id',authMiddleware,deleteCatalog )
+router.delete('/catalog/:id',authMiddleware,deleteCatalog )
 export default router;
 

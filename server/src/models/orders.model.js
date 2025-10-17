@@ -5,7 +5,7 @@ import db from '../config/db.js';
 export const insertOrder = async (IDUsuario, IDHabitacion, fechaPedido, estado) => {
     try {
         const [result] = await db.query(
-            `INSERT INTO pedidos_buffet (IDUsuario, IDHabitacion, fechaPedido, estado) VALUES (?, ?, ?, ?)`,
+            `INSERT INTO pedido (IDUsuario, IDHabitacion, fechaPedido, estado) VALUES (?, ?, ?, ?)`,
             [IDUsuario, IDHabitacion, fechaPedido, estado]
         );
         return result.insertId;
@@ -15,11 +15,11 @@ export const insertOrder = async (IDUsuario, IDHabitacion, fechaPedido, estado) 
     }
 };
 
-// Listar pedidos de un usuario
+// CORREGIDO: usar "pedido" (singular) en lugar de "pedidos"
 export const findOrdersByUser = async (IDUsuario) => {
     try {
         const [rows] = await db.query(
-            `SELECT * FROM pedidos_buffet WHERE IDUsuario = ? ORDER BY fechaPedido DESC`,
+            `SELECT * FROM pedido WHERE IDUsuario = ? ORDER BY fechaPedido DESC`,
             [IDUsuario]
         );
         return rows;
@@ -29,11 +29,10 @@ export const findOrdersByUser = async (IDUsuario) => {
     }
 };
 
-// Obtener un pedido por ID (para ver estado)
 export const findOrderById = async (id, IDUsuario) => {
     try {
         const [rows] = await db.query(
-            `SELECT * FROM pedidos_buffet WHERE ID = ? AND IDUsuario = ?`,
+            `SELECT * FROM pedido WHERE ID = ? AND IDUsuario = ?`,
             [id, IDUsuario]
         );
         return rows[0] || null;

@@ -1,10 +1,13 @@
 import { AllRooms } from "../models/room.model.js";
 import {
+  updateStatusBooking,
   insertReservation,
+  getBookingId,
   getAllReservations,
   updateReservationByIds,
-  cancelReservationByIds,getActiveReservations,
+  cancelReservationByIds,getActiveReservations,syncReservationsModel
 } from "../models/reservations.model.js";
+import { response } from "express";
 
 /// Crear reserva
 export const createReservation = async (req, res) => {
@@ -71,8 +74,8 @@ export const createReservation = async (req, res) => {
 // Obtener reservas (solo las del usuario logueado)
 export const getReservations = async (req, res) => {
   try {
-    const IDUsuario = req.user.IDUsuario;
-    const reservas = await getAllReservations(IDUsuario);
+    const IDUsuario = req.user.id;
+    const reservas = await getBookingId(IDUsuario);
     res.status(200).json(reservas);
   } catch (error) {
     res.status(500).json({
@@ -156,4 +159,53 @@ export const getActiveReservationsController = async (req, res) => {
             error: error.message 
         });
     }
+};
+export const allReservation = async(req, res) =>{
+  try {
+        const reservations = await getAllReservations();
+        console.log('Reservas encontradas:', reservations.length);
+        // Formatear la respuesta según el formato requerido por el frontend
+        const response = {
+            reservas: reservations.map(reserva => ({
+                IDReserva: reserva.id,
+                fechaIngreso: reserva.fechaIngreso,
+                fechaEgreso: reserva.fechaEgreso,
+                estado: reserva.estado,
+                precio: reserva.precio,
+                IDHabitacion: reserva.IDHabitacion,
+                IDUsuario: reserva.IDUsuario
+            }))
+        };
+        
+        res.json(response);
+    } catch (error) {
+        console.error('Error al obtener todas las reservas:', error);
+        res.status(500).json({ 
+            message: "Error al obtener reservas activas", 
+            error: error.message 
+        });
+    }
+}
+export const syncReservation = async (req, res) => {
+  try {
+    await syncReservationsModel();
+    res.status(200).json({ message: 'Reservas sincronizadas correctamente.' });
+  } catch (error) {
+    console.error('Error sincronizando reservas:', error);
+    res.status(500).json({ error: 'Error al sincronizar reservas.' });
+  }
+};
+
+export const updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    await updateStatusBooking(id, estado);
+
+    res.status(200).json({ message: 'Estado actualizado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar reserva' });
+  }
 };

@@ -1,545 +1,500 @@
-import { useState, useRef } from 'react';
-import "../styles/Buffet.css"
-// Constante: Capacidad total de buffet por tipo
-const CAPACIDAD_TOTAL = 10;
+import { useState, useEffect } from 'react';
+import '../styles/Buffet.css';
+import { obtenerHabitacionReservaActiva } from '../utils/ReserveActive';
 
-// Función para decodificar el token 
-const decodeToken = (token) => {
+const BuffetSelector = () => {
+  // Estados
+  const [productos, setProductos] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('buffet');
+  const [carrito, setCarrito] = useState([]);
+  const [mostrarCarrito, setMostrarCarrito] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [cargandoProductos, setCargandoProductos] = useState(true);
+  const [errorProductos, setErrorProductos] = useState(null);
+
+  // Categorías
+  const categorias = [
+    { id: 'bebidas', nombre: 'Bebidas', icon: '🥤' },
+    { id: 'buffet', nombre: 'Platos Principales', icon: '🍽️' },
+    { id: 'postres', nombre: 'Postres', icon: '🍰' }
+  ];
+
+  // Cargar productos desde la API
+  useEffect(() => {
+    const cargarProductos = async () => {
+      try {
+        setCargandoProductos(true);
+        const response = await fetch('http://localhost:8080/api/buffet/catalog'); // Ajusta la URL según tu API
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar el catálogo');
+        }
+
+        const data = await response.json();
+        
+        // Mapear los datos de la API al formato que usa el componente
+        const productosFormateados = data.catalog.map(item => ({
+          id: item.ID,
+          nombre: item.nombre,
+          descripcion: item.descripcion,
+          categoria: item.categoria,
+          disponibilidad: item.disponibilidad,
+          precio: parseFloat(item.precio), // Convertir string a número
+          img: item.img
+        }));
+
+        setProductos(productosFormateados);
+        setErrorProductos(null);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        setErrorProductos(error.message);
+      } finally {
+        setCargandoProductos(false);
+      }
+    };
+
+    cargarProductos();
+  }, []);
+
+  const productosFiltrados = productos.filter(
+    p => p.categoria === categoriaSeleccionada && p.disponibilidad === 1
+  );
+
+  const agregarAlCarrito = (producto) => {
+    const itemExistente = carrito.find(item => item.id === producto.id);
+    
+    if (itemExistente) {
+      setCarrito(carrito.map(item =>
+        item.id === producto.id
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      ));
+    } else {
+      setCarrito([...carrito, { ...producto, cantidad: 1 }]);
+    }
+  };
+
+  const modificarCantidad = (id, cambio) => {
+    setCarrito(carrito.map(item => {
+      if (item.id === id) {
+        const nuevaCantidad = item.cantidad + cambio;
+        return nuevaCantidad > 0 ? { ...item, cantidad: nuevaCantidad } : item;
+      }
+      return item;
+    }).filter(item => item.cantidad > 0));
+  };
+
+  const eliminarDelCarrito = (id) => {
+    setCarrito(carrito.filter(item => item.id !== id));
+  };
+
+  const calcularTotal = () => {
+    return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+  };
+
+  const cantidadTotal = carrito.reduce((total, item) => total + item.cantidad, 0);
+
+  const confirmarOrden = async () => {
+    if (carrito.length === 0) {
+      alert('El carrito está vacío');
+      return;
+    }
+
+    setLoading(true);
+    
     try {
-        const payload = token.split('.')[1];
-        const decodedPayload = JSON.parse(atob(payload));
-        return decodedPayload;
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No estás autenticado. Por favor, inicia sesión.');
+      }
+
+      // Obtener la habitación de la reserva activa más reciente
+      const resultadoReserva = await obtenerHabitacionReservaActiva(token);
+      
+      if (!resultadoReserva.tieneReservaActiva) {
+        throw new Error('No tienes una reserva activa para realizar pedidos');
+      }
+
+      const IDHabitacion = resultadoReserva.habitacionId;
+      const fechaPedido = new Date().toISOString().split('T')[0];
+      
+      const ordenData = {
+        IDHabitacion: IDHabitacion,
+        fechaPedido: fechaPedido,
+        estado: 'pendiente',
+        items: carrito.map(item => ({
+          IDBuffet: item.id,
+          cantidad: item.cantidad,
+          subtotal: parseFloat((item.precio * item.cantidad).toFixed(2))
+        }))
+      };
+
+      console.log('Enviando orden:', ordenData);
+
+      const response = await fetch('http://localhost:8080/api/orders/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(ordenData),
+      });
+
+      const contentType = response.headers.get("content-type");
+      let resultado;
+      
+      if (contentType && contentType.includes("application/json")) {
+        resultado = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Respuesta no JSON:', text);
+        throw new Error('El servidor no respondió con JSON válido');
+      }
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error(`Datos inválidos: ${resultado.message}`);
+        }
+        if (response.status === 401) {
+          throw new Error('No autorizado. Token inválido.');
+        }
+        throw new Error(resultado.message || 'Error del servidor');
+      }
+
+      mostrarConfirmacionExitosa(resultado.orderId);
+      
+      setCarrito([]);
+      setMostrarCarrito(false);
+
     } catch (error) {
-        console.error('Error al decodificar el token:', error);
-        return null;
+      console.error('Error completo:', error);
+      manejarErrorConfirmacion(error.message);
+    } finally {
+      setLoading(false);
     }
-};
+  };
 
-// Función para validar capacidad
-const validarCapacidad = (buffetType, checkIn, checkOut, pedidosActivos, capacidadTotal) => {
-    const pedidosEnRango = pedidosActivos.filter(pedido => {
-        const pedidoCheckIn = new Date(pedido.fecha);
-        const pedidoCheckOut = new Date(pedido.fecha);
-        pedidoCheckOut.setDate(pedidoCheckOut.getDate() + 1);
-        
-        const rangoCheckIn = new Date(checkIn);
-        const rangoCheckOut = new Date(checkOut);
-        
-        return pedido.tipoBuffet === buffetType &&
-               pedidoCheckIn < rangoCheckOut && 
-               pedidoCheckOut > rangoCheckIn;
-    });
+  const mostrarConfirmacionExitosa = (orderId) => {
+    alert(`
+      ✅ ¡Orden confirmada exitosamente!
+      
+      Número de pedido: #${orderId}
+      Total: $${calcularTotal().toFixed(2)}
+      Estado: Pendiente
+      
+      Su pedido será entregado en su habitación.
+      Puede seguir el estado de su pedido en la sección "Mis Pedidos".
+    `);
+  };
 
-    const disponibles = capacidadTotal - pedidosEnRango.length;
-    
-    return {
-        disponible: disponibles > 0,
-        ocupadas: pedidosEnRango.length,
-        disponibles: disponibles
-    };
-};
+  const manejarErrorConfirmacion = (mensajeError) => {
+    alert(`❌ Error al confirmar la orden: ${mensajeError}`);
+  };
 
-// Función para calcular fechas sugeridas
-const calcularFechasSugeridaConCapacidad = (buffetType, pedidosActivos, capacidadTotal) => {
-    const hoy = new Date();
-    const mañana = new Date(hoy);
-    mañana.setDate(mañana.getDate() + 1);
-    
-    const checkInStr = hoy.toISOString().split('T')[0];
-    const checkOutStr = mañana.toISOString().split('T')[0];
-    
-    const validacion = validarCapacidad(buffetType, checkInStr, checkOutStr, pedidosActivos, capacidadTotal);
-    
-    return {
-        checkIn: checkInStr,
-        checkOut: checkOutStr,
-        mensaje: `Se recomienda esta fecha basada en disponibilidad`,
-        disponibles: validacion.disponibles
-    };
-};
-
-// Función para obtener estadísticas
-const obtenerEstadisticasOcupacion = (buffetType, pedidosActivos, capacidadTotal) => {
-    const hoy = new Date().toISOString().split('T')[0];
-    
-    const pedidosHoy = pedidosActivos.filter(pedido => 
-        pedido.tipoBuffet === buffetType && pedido.fecha === hoy
-    );
-    
-    const ocupadasHoy = pedidosHoy.length;
-    const disponiblesHoy = capacidadTotal - ocupadasHoy;
-    const porcentajeOcupacion = Math.round((ocupadasHoy / capacidadTotal) * 100);
-    
-    return {
-        ocupadasHoy,
-        disponiblesHoy,
-        porcentajeOcupacion
-    };
-};
-
-// Datos de buffets
-const BUFFETS_DATA = [
-    {
-        id: 1,
-        type: 'Continental',
-        description: 'Desayuno ligero con frutas, pan tostado y bebidas',
-        image: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&h=300&fit=crop',
-        features: ['Pan fresco', 'Frutas variadas', 'Bebidas calientes', 'Precio: $15000']
-    },
-    {
-        id: 2,
-        type: 'Americano',
-        description: 'Desayuno completo con huevos, tocino y acompañamientos',
-        image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400&h=300&fit=crop',
-        features: ['Huevos a la carta', 'Carnes frías', 'Tostadas', 'Precio: $25000']
-    },
-    {
-        id: 3,
-        type: 'Deluxe',
-        description: 'Buffet premium con opciones gourmet y especiales',
-        image: 'https://images.unsplash.com/photo-1504674900769-7c1f6319443d?w=400&h=300&fit=crop',
-        features: ['Salmón ahumado', 'Quesos importados', 'Postres gourmet', 'Precio: $40000']
-    },
-    {
-        id: 4,
-        type: 'Vegetariano',
-        description: 'Opciones saludables y nutritivas para vegetarianos',
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
-        features: ['Ensaladas frescas', 'Granolas artesanales', 'Smoothies', 'Precio: $20000']
-    },
-    {
-        id: 5,
-        type: 'Vegano',
-        description: 'Opciones saludables y nutritivas para vegetarianos',
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
-        features: ['Ensaladas de frutas','Ensaladas de verduras', 'Granolas artesanales', 'Smoothies', 'Precio: $30000']
-    }
-];
-
-// Mock de pedidos activos
-const MOCK_PEDIDOS_ACTIVOS = [
-    {
-        id: 1,
-        tipoBuffet: 'Continental',
-        fecha: new Date().toISOString().split('T')[0],
-        usuario: 'Juan Pérez'
-    }
-];
-
-export default function BuffetOrders() {
-    const [selectedBuffet, setSelectedBuffet] = useState(null);
-    const [formData, setFormData] = useState({
-        checkIn: '',
-        checkOut: '',
-        phone: '',
-        guests: '',
-        comments: ''
-    });
-    const [fechasSugeridas, setFechasSugeridas] = useState({ 
-        checkIn: '', 
-        checkOut: '',
-        mensaje: '',
-        disponibles: CAPACIDAD_TOTAL
-    });
-    const [pedidosActivos] = useState(MOCK_PEDIDOS_ACTIVOS);
-    const [loading, setLoading] = useState(false);
-    const formRef = useRef(null);
-
-    // Función para manejar cambios en los inputs
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
-    };
-
-    const handleSeleccionar = (buffet) => {
-        console.log('═══════════════════════════════════════════');
-        console.log(`🍽️ Seleccionando buffet: ${buffet.type} (ID: ${buffet.id})`);
-        console.log('═══════════════════════════════════════════');
-        
-        setSelectedBuffet(buffet);
-        
-        // Calcular fechas sugeridas considerando capacidad
-        const fechas = calcularFechasSugeridaConCapacidad(
-            buffet.type, 
-            pedidosActivos, 
-            CAPACIDAD_TOTAL
-        );
-        
-        console.log('📅 Fechas sugeridas calculadas:', fechas);
-        
-        // Obtener estadísticas de ocupación
-        const stats = obtenerEstadisticasOcupacion(buffet.type, pedidosActivos, CAPACIDAD_TOTAL);
-        console.log('📊 Estadísticas de ocupación:', stats);
-        
-        setFechasSugeridas(fechas);
-        
-        // Pre-rellenar fechas sugeridas
-        setFormData(prev => ({
-            ...prev,
-            checkIn: fechas.checkIn,
-            checkOut: fechas.checkOut,
-            phone: '',
-            guests: '',
-            comments: ''
-        }));
-
-        // Scroll suave hacia el formulario
-        setTimeout(() => {
-            formRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 200);
-    };
-
-    // Función para aplicar fechas sugeridas manualmente
-    const aplicarFechasSugeridas = () => {
-        setFormData(prev => ({
-            ...prev,
-            checkIn: fechasSugeridas.checkIn,
-            checkOut: fechasSugeridas.checkOut
-        }));
-    };
-
-    const handleOrder = async (e) => {
-        e.preventDefault();
-
-        console.log('═══════════════════════════════════════════');
-        console.log('🔄 Iniciando proceso de pedido de buffet');
-        console.log('═══════════════════════════════════════════');
-
-        // Validar fechas básicas
-        if (!formData.checkIn || !formData.checkOut) {
-            alert('Por favor, selecciona ambas fechas');
-            return;
-        }
-
-        const checkInDate = new Date(formData.checkIn);
-        const checkOutDate = new Date(formData.checkOut);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (checkInDate < today) {
-            alert('La fecha no puede ser anterior a hoy');
-            return;
-        }
-
-        if (checkOutDate <= checkInDate) {
-            alert('La fecha de egreso debe ser posterior a la de ingreso');
-            return;
-        }
-
-        // ✅ VALIDACIÓN CON CAPACIDAD
-        const validacion = validarCapacidad(
-            selectedBuffet.type,
-            formData.checkIn, 
-            formData.checkOut, 
-            pedidosActivos,
-            CAPACIDAD_TOTAL
-        );
-
-        console.log('🔍 Resultado de validación de capacidad:', validacion);
-
-        if (!validacion.disponible) {
-            alert(
-                `❌ No hay disponibilidad en las fechas seleccionadas.\n\n` +
-                `📊 Ocupación: ${validacion.ocupadas}/${CAPACIDAD_TOTAL} reservas\n\n` +
-                `💡 Te sugerimos usar:\n` +
-                `📅 Desde: ${fechasSugeridas.checkIn}\n` +
-                `📅 Hasta: ${fechasSugeridas.checkOut}\n` +
-                `✅ Disponibles: ${fechasSugeridas.disponibles}/${CAPACIDAD_TOTAL}`
-            );
-            return;
-        }
-
-        // Mostrar confirmación con disponibilidad
-        const priceFeature = selectedBuffet.features.find(feature => 
-            feature.toLowerCase().includes('precio')
-        );
-        const precio = priceFeature ? parseInt(priceFeature.match(/\d+/)[0]) : 0;
-
-        const confirmacion = window.confirm(
-            `¿Confirmar pedido de buffet?\n\n` +
-            `🍽️ Buffet: ${selectedBuffet.type}\n` +
-            `📅 Desde: ${formData.checkIn}\n` +
-            `📅 Hasta: ${formData.checkOut}\n` +
-            `👥 Huéspedes: ${formData.guests}\n` +
-            `💰 Precio: $${precio}\n` +
-            `✅ Disponibilidad: ${validacion.disponibles}/${CAPACIDAD_TOTAL} cupos libres`
-        );
-
-        if (!confirmacion) return;
-
-        setLoading(true);
-
-        try {
-            const token = localStorage.getItem('token');
-            const decodedToken = decodeToken(token);
-            console.log('🔑 Token decodificado:', decodedToken);
-
-            // Estructura de datos para el pedido
-            const pedidoData = {
-                tipoBuffet: selectedBuffet.type,
-                fechaIngreso: formData.checkIn,
-                fechaEgreso: formData.checkOut,
-                cantidadHuespedes: formData.guests,
-                telefono: formData.phone,
-                comentarios: formData.comments,
-                precio: precio,
-                estado: 'pendiente',
-                IDUsuario: decodedToken?.IDUsuario || decodedToken?.id
-            };
-
-            console.log('📤 Enviando pedido al backend:', pedidoData);
-
-            const response = await fetch('http://localhost:8080/api/buffet/order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(pedidoData)
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || `Error ${response.status}: ${response.statusText}`);
-            }
-
-            console.log('✅ Pedido creado exitosamente:', result);
-            alert('¡Pedido de buffet creado exitosamente! 🎉');
-            
-            // Limpiar formulario
-            setSelectedBuffet(null);
-            setFormData({
-                checkIn: '',
-                checkOut: '',
-                phone: '',
-                guests: '',
-                comments: ''
-            });
-
-        } catch (error) {
-            console.error('❌ Error al crear pedido:', error);
-            alert('Error al crear el pedido: ' + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+  // Mostrar estado de carga
+  if (cargandoProductos) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-600 to-purple-700">
-            <style>{`
-                @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-                
-                body {
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                }
-                
-                .action-card::before {
-                  content: '';
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  height: 4px;
-                  background: linear-gradient(90deg, #667eea, #764ba2);
-                }
-            `}</style>
-
-            {/* HERO SECTION */}
-            <section className="py-16 text-center text-white">
-                <div className="container mx-auto px-4">
-                    <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">Pide nuestro Delicioso Buffet</h1>
-                    <p className="text-xl opacity-90">Elige el buffet perfecto y disfruta en tu habitación</p>
-                </div>
-            </section>
-
-            {/* BUFFETS GRID SECTION */}
-            <section className="py-12">
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {BUFFETS_DATA.map((buffet) => {
-                            const stats = obtenerEstadisticasOcupacion(buffet.type, pedidosActivos, CAPACIDAD_TOTAL);
-                            
-                            return (
-                                <div key={buffet.id} className="bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                                    {/* Imagen */}
-                                    <div className="relative h-48 overflow-hidden">
-                                        <img 
-                                            src={buffet.image} 
-                                            alt={`Buffet ${buffet.type}`}
-                                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                                        />
-                                        <div className={`absolute top-4 right-4 px-3 py-2 rounded-full text-xs font-semibold ${
-                                            stats.disponiblesHoy === 0 
-                                                ? 'bg-red-500 text-white' 
-                                                : 'bg-green-500 text-white'
-                                        }`}>
-                                            {stats.disponiblesHoy === 0 
-                                                ? '❌ Lleno hoy' 
-                                                : `✅ ${stats.disponiblesHoy}/${CAPACIDAD_TOTAL} disponibles`
-                                            }
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Contenido */}
-                                    <div className="p-6">
-                                        <h3 className="text-2xl font-bold text-gray-800 mb-2">{buffet.type}</h3>
-                                        <p className="text-gray-600 mb-4 text-sm">{buffet.description}</p>
-                                        
-                                        {/* Features */}
-                                        <ul className="mb-4 space-y-2">
-                                            {buffet.features.map((feature, index) => (
-                                                <li key={index} className="text-sm text-gray-700">
-                                                    <span className="text-green-600 mr-2">✓</span>
-                                                    {feature}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        
-                                        {/* Ocupación */}
-                                        {stats.ocupadasHoy > 0 && (
-                                            <div className="text-center mb-4 p-3 bg-gray-100 rounded-lg">
-                                                <p className="text-sm text-gray-700">
-                                                    📊 Ocupación hoy: {stats.porcentajeOcupacion}%
-                                                </p>
-                                            </div>
-                                        )}
-                                        
-                                        <button 
-                                            onClick={() => handleSeleccionar(buffet)}
-                                            className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-300 font-semibold hover:shadow-lg"
-                                        >
-                                            🍽️ Seleccionar Buffet
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* FORMULARIO DE PEDIDO */}
-            <section 
-                ref={formRef}
-                className={`py-12 transition-all duration-300 ${selectedBuffet ? 'visible' : 'hidden'}`}
-            >
-                <div className="container mx-auto px-4">
-                    {selectedBuffet && (
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl mx-auto">
-                            <h2 className="text-3xl font-bold text-gray-800 mb-6">
-                                🍽️ Pedir Buffet {selectedBuffet.type}
-                            </h2>
-                            
-                            {/* Alert */}
-                            <div className={`p-6 rounded-lg mb-6 border ${
-                                fechasSugeridas.disponibles === 0 
-                                    ? 'bg-red-50 border-red-300' 
-                                    : 'bg-blue-50 border-blue-300'
-                            }`}>
-                                <p className="font-semibold mb-2">
-                                    📅 Fechas sugeridas: {fechasSugeridas.checkIn} a {fechasSugeridas.checkOut}
-                                </p>
-                                <p className="text-sm mb-2">{fechasSugeridas.mensaje}</p>
-                                <p className="font-bold text-lg">
-                                    ✅ Disponibilidad: {fechasSugeridas.disponibles}/{CAPACIDAD_TOTAL} cupos
-                                </p>
-                            </div>
-                            
-                            <form onSubmit={handleOrder} className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-gray-700 font-semibold mb-2">Fecha de Ingreso</label>
-                                        <input 
-                                            type="date" 
-                                            name="checkIn"
-                                            value={formData.checkIn}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600"
-                                            min={new Date().toISOString().split('T')[0]}
-                                            required 
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-700 font-semibold mb-2">Fecha de Egreso</label>
-                                        <input 
-                                            type="date" 
-                                            name="checkOut"
-                                            value={formData.checkOut}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600"
-                                            min={formData.checkIn || new Date().toISOString().split('T')[0]}
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-gray-700 font-semibold mb-2">Teléfono</label>
-                                        <input 
-                                            type="tel" 
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600"
-                                            placeholder="+54 9 11 1234-5678"
-                                            required 
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-700 font-semibold mb-2">Cantidad de Huéspedes</label>
-                                        <select 
-                                            name="guests"
-                                            value={formData.guests}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600" 
-                                            required
-                                        >
-                                            <option value="">Selecciona...</option>
-                                            <option value="1">1 Huésped</option>
-                                            <option value="2">2 Huéspedes</option>
-                                            <option value="3">3 Huéspedes</option>
-                                            <option value="4">4 Huéspedes</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-gray-700 font-semibold mb-2">Comentarios Adicionales</label>
-                                    <textarea 
-                                        name="comments"
-                                        value={formData.comments}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600"
-                                        placeholder="Alergias, restricciones dietéticas, solicitudes especiales..."
-                                        rows="4"
-                                    />
-                                </div>
-
-                                <button 
-                                    type="submit" 
-                                    disabled={loading}
-                                    className="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all duration-300 disabled:opacity-50 hover:shadow-lg"
-                                >
-                                    {loading ? '⏳ Procesando...' : '✅ Confirmar Pedido'}
-                                </button>
-                                
-                                <button 
-                                    type="button"
-                                    onClick={aplicarFechasSugeridas}
-                                    className="w-full px-6 py-3 bg-cyan-500 text-white font-semibold rounded-lg hover:bg-cyan-600 transition-all duration-300 hover:shadow-lg"
-                                >
-                                    🔄 Restaurar Fechas Sugeridas ({fechasSugeridas.checkIn} - {fechasSugeridas.checkOut})
-                                </button>
-                            </form>
-                        </div>
-                    )}
-                </div>
-            </section>
+      <div className="buffet-container">
+        <div className="buffet-header">
+          <div className="buffet-header-content">
+            <div className="buffet-header-title">
+              <h1>Servicio a la Habitación</h1>
+              <p>Cargando productos...</p>
+            </div>
+          </div>
         </div>
+      </div>
     );
-}
+  }
+
+  // Mostrar error si falla la carga
+  if (errorProductos) {
+    return (
+      <div className="buffet-container">
+        <div className="buffet-header">
+          <div className="buffet-header-content">
+            <div className="buffet-header-title">
+              <h1>Servicio a la Habitación</h1>
+              <p style={{ color: 'red' }}>Error: {errorProductos}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="buffet-container">
+      {/* Header */}
+      <div className="buffet-header">
+        <div className="buffet-header-content">
+          <div className="buffet-header-title">
+            <h1>Servicio a la Habitación</h1>
+            <p>Seleccione sus productos del buffet</p>
+          </div>
+          <button
+            onClick={() => setMostrarCarrito(!mostrarCarrito)}
+            className="buffet-cart-btn"
+          >
+            <i className="bi bi-cart3"></i>
+            <span>Carrito</span>
+            {cantidadTotal > 0 && (
+              <span className="buffet-cart-badge">
+                {cantidadTotal}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="buffet-main">
+        <div className="buffet-layout">
+          {/* Panel Principal */}
+          <div className="buffet-products-section">
+            {/* Selector de Categorías */}
+            <div className="buffet-categories">
+              <h2>Categorías</h2>
+              <div className="buffet-categories-grid">
+                {categorias.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoriaSeleccionada(cat.id)}
+                    className={`buffet-category-btn ${categoriaSeleccionada === cat.id ? 'active' : ''}`}
+                  >
+                    <div className="buffet-category-icon">{cat.icon}</div>
+                    <div className="buffet-category-name">
+                      {cat.nombre}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Grid de Productos */}
+            <div className="buffet-products-grid">
+              {productosFiltrados.map(producto => (
+                <div
+                  key={producto.id}
+                  className="buffet-product-card"
+                >
+                  <div className="buffet-product-image">
+                    <img
+                      src={producto.img}
+                      alt={producto.nombre}
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImagen%3C/text%3E%3C/svg%3E';
+                      }}
+                    />
+                  </div>
+                  <div className="buffet-product-info">
+                    <h3 className="buffet-product-name">{producto.nombre}</h3>
+                    <p className="buffet-product-description">{producto.descripcion}</p>
+                    <div className="buffet-product-footer">
+                      <span className="buffet-product-price">
+                        ${producto.precio.toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => agregarAlCarrito(producto)}
+                        className="buffet-add-btn"
+                      >
+                        <i className="bi bi-plus-lg"></i>
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel del Carrito (visible en desktop) */}
+          {mostrarCarrito && (
+            <div className="buffet-cart-panel">
+              <div className="buffet-cart-content">
+                <div className="buffet-cart-header">
+                  <h2>Mi Orden</h2>
+                  <button
+                    onClick={() => setMostrarCarrito(false)}
+                    className="buffet-cart-close hide-desktop"
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+
+                {carrito.length === 0 ? (
+                  <div className="buffet-cart-empty">
+                    <i className="bi bi-cart3"></i>
+                    <p>Tu carrito está vacío</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="buffet-cart-items">
+                      {carrito.map(item => (
+                        <div key={item.id} className="buffet-cart-item">
+                          <img
+                            src={item.img}
+                            alt={item.nombre}
+                            className="buffet-cart-item-image"
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23e0e0e0" width="64" height="64"/%3E%3C/svg%3E';
+                            }}
+                          />
+                          <div className="buffet-cart-item-info">
+                            <h4 className="buffet-cart-item-name">{item.nombre}</h4>
+                            <p className="buffet-cart-item-price">${item.precio.toFixed(2)}</p>
+                          </div>
+                          <div className="buffet-cart-item-controls">
+                            <button
+                              onClick={() => modificarCantidad(item.id, -1)}
+                              className="buffet-quantity-btn"
+                            >
+                              <i className="bi bi-dash"></i>
+                            </button>
+                            <span className="buffet-quantity-display">{item.cantidad}</span>
+                            <button
+                              onClick={() => modificarCantidad(item.id, 1)}
+                              className="buffet-quantity-btn"
+                            >
+                              <i className="bi bi-plus"></i>
+                            </button>
+                            <button
+                              onClick={() => eliminarDelCarrito(item.id)}
+                              className="buffet-delete-btn"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="buffet-cart-footer">
+                      <div className="buffet-cart-total">
+                        <span className="buffet-cart-total-label">Total:</span>
+                        <span className="buffet-cart-total-amount">
+                          ${calcularTotal().toFixed(2)}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={confirmarOrden}
+                        className="buffet-confirm-btn"
+                        disabled={carrito.length === 0 || loading}
+                      >
+                        {loading ? (
+                          <>
+                            <i className="bi bi-arrow-repeat spin"></i>
+                            Procesando...
+                          </>
+                        ) : (
+                          <>
+                            Confirmar Orden (${calcularTotal().toFixed(2)})
+                            <i className="bi bi-chevron-right"></i>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Carrito Modal (móvil) */}
+      {mostrarCarrito && (
+        <div className="buffet-cart-modal-overlay" onClick={() => setMostrarCarrito(false)}>
+          <div className="buffet-cart-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="buffet-cart-header">
+              <h2>Mi Orden</h2>
+              <button
+                onClick={() => setMostrarCarrito(false)}
+                className="buffet-cart-close"
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            {carrito.length === 0 ? (
+              <div className="buffet-cart-empty">
+                <i className="bi bi-cart3"></i>
+                <p>Tu carrito está vacío</p>
+              </div>
+            ) : (
+              <>
+                <div className="buffet-cart-items">
+                  {carrito.map(item => (
+                    <div key={item.id} className="buffet-cart-item">
+                      <img
+                        src={item.img}
+                        alt={item.nombre}
+                        className="buffet-cart-item-image"
+                        onError={(e) => {
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23e0e0e0" width="64" height="64"/%3E%3C/svg%3E';
+                        }}
+                      />
+                      <div className="buffet-cart-item-info">
+                        <h4 className="buffet-cart-item-name">{item.nombre}</h4>
+                        <p className="buffet-cart-item-price">${item.precio.toFixed(2)}</p>
+                      </div>
+                      <div className="buffet-cart-item-controls">
+                        <button
+                          onClick={() => modificarCantidad(item.id, -1)}
+                          className="buffet-quantity-btn"
+                        >
+                          <i className="bi bi-dash"></i>
+                        </button>
+                        <span className="buffet-quantity-display">{item.cantidad}</span>
+                        <button
+                          onClick={() => modificarCantidad(item.id, 1)}
+                          className="buffet-quantity-btn"
+                        >
+                          <i className="bi bi-plus"></i>
+                        </button>
+                        <button
+                          onClick={() => eliminarDelCarrito(item.id)}
+                          className="buffet-delete-btn"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="buffet-cart-footer">
+                  <div className="buffet-cart-total">
+                    <span className="buffet-cart-total-label">Total:</span>
+                    <span className="buffet-cart-total-amount">
+                      ${calcularTotal().toFixed(2)}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={confirmarOrden}
+                    className="buffet-confirm-btn"
+                    disabled={carrito.length === 0 || loading}
+                  >
+                    {loading ? (
+                      <>
+                        <i className="bi bi-arrow-repeat spin"></i>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        Confirmar Orden (${calcularTotal().toFixed(2)})
+                        <i className="bi bi-chevron-right"></i>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BuffetSelector;

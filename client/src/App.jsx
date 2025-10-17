@@ -8,19 +8,22 @@ import Menu from './pages/menuPrincipal';
 import CreateUser from './pages/createUser';
 import Reservation from './pages/Reservation';
 import ReservationManager from './pages/ReservationsMagnament'; 
-
+import MyBooking from './pages/mybooking';
+import Buffet from './pages/Buffet';
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
         <Navbar />
         <Routes>
+          <Route path="/buffet" element={<Buffet />} />
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Menu />} />
           <Route path="/register" element={<CreateUser />} />
           <Route path="/reservations" element={<Reservation />} />
-          <Route path="/admin" element={<ReservationManager />} />            
+          <Route path="/admin" element={<ReservationManager />} />  
+          <Route path="/mybooking" element={<MyBooking />} />          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

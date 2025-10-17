@@ -1,7 +1,6 @@
 import db from '../config/db.js';
 
 // Crear una reserva
-// Crear una reserva
 export const insertReservation = async (fechaIngreso, fechaEgreso, estado, IDUsuario, IDHabitacion, precio) => {
   try {
     const sql = `
@@ -21,9 +20,11 @@ export const insertReservation = async (fechaIngreso, fechaEgreso, estado, IDUsu
 };
 
 // Obtener todas las reservas
-export const getAllReservations = async (IDUsuario) => {
+export const getBookingId = async (IDUsuario) => {
+  console.log(IDUsuario);
   try {
     const [rows] = await db.query('SELECT * FROM reservas WHERE IDUsuario = ?', [IDUsuario]);
+    console.log(rows);
     return rows;
   } catch (error) {
     throw error;
@@ -84,4 +85,59 @@ export const getActiveReservations = async () => {
         console.error("Error al obtener reservas activas:", error);
         throw error;
     }
+};
+export const getAllReservations = async()=>{
+      try {
+        const [rows] = await db.query(
+            `SELECT 
+                IDReserva as id,
+                fechaIngreso,
+                fechaEgreso,
+                estado,
+                IDUsuario,
+                IDHabitacion,
+                precio
+             FROM reservas`
+        );
+        return rows;
+    } catch (error) {
+        console.error("Error al obtener reservas activas:", error);
+        throw error;
+    }
+}
+// reservations.model.js
+
+export const syncReservationsModel = async () => {
+  try {
+    // Actualizar reservas autorizadas -> activas
+    await db.query(`
+      UPDATE reservas
+      SET estado = 'activo'
+      WHERE estado = 'autorizado'
+        AND CURDATE() BETWEEN fechaIngreso AND fechaEgreso
+    `);
+
+    // Actualizar reservas activas -> finalizadas
+    await db.query(`
+      UPDATE reservas
+      SET estado = 'finalizado'
+      WHERE estado = 'activo'
+        AND fechaEgreso < CURDATE()
+    `);
+
+    console.log('✅ Reservas sincronizadas correctamente');
+  } catch (error) {
+    console.error('❌ Error en syncReservationsModel:', error);
+    throw error;
+  }
+};
+export const updateStatusBooking = async (id, estado) => {
+  try {
+    const sql = 'UPDATE reservas SET estado = ? WHERE IDReserva = ?';
+    const [result] = await db.query(sql, [estado, id]); // <-- CORREGIDO
+    return result;
+  } catch (error) {
+    console.error('Error al cambiar estado de la reserva', error);
+    throw error;
+  }
 };

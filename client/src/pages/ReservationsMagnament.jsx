@@ -1,102 +1,199 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import '../styles/reservationMagnament.css';
 
 export default function ReservasManager() {
-  const [reservas, setReservas] = useState([
-    { id: 1, fechaIngreso: '2025-10-11', fechaEgreso: '2025-10-14', estado: 'pendiente', IDUsuario: 5, IDHabitacion: 101, precio: 45000 },
-    { id: 2, fechaIngreso: '2025-10-12', fechaEgreso: '2025-10-15', estado: 'pendiente', IDUsuario: 12, IDHabitacion: 205, precio: 60000 },
-    { id: 3, fechaIngreso: '2025-10-13', fechaEgreso: '2025-10-16', estado: 'pendiente', IDUsuario: 8, IDHabitacion: 103, precio: 52000 },
-    { id: 4, fechaIngreso: '2025-10-14', fechaEgreso: '2025-10-17', estado: 'pendiente', IDUsuario: 20, IDHabitacion: 301, precio: 80000 },
-    { id: 5, fechaIngreso: '2025-10-15', fechaEgreso: '2025-10-18', estado: 'pendiente', IDUsuario: 15, IDHabitacion: 102, precio: 48000 },
-    { id: 6, fechaIngreso: '2025-10-18', fechaEgreso: '2025-10-21', estado: 'pendiente', IDUsuario: 7, IDHabitacion: 204, precio: 55000 },
-    { id: 7, fechaIngreso: '2025-10-19', fechaEgreso: '2025-10-22', estado: 'pendiente', IDUsuario: 25, IDHabitacion: 105, precio: 47000 },
-    { id: 8, fechaIngreso: '2025-10-20', fechaEgreso: '2025-10-23', estado: 'pendiente', IDUsuario: 11, IDHabitacion: 302, precio: 72000 },
-    { id: 9, fechaIngreso: '2025-10-22', fechaEgreso: '2025-10-25', estado: 'pendiente', IDUsuario: 9, IDHabitacion: 201, precio: 58000 },
-    { id: 10, fechaIngreso: '2025-10-25', fechaEgreso: '2025-10-28', estado: 'pendiente', IDUsuario: 18, IDHabitacion: 104, precio: 51000 },
-    { id: 11, fechaIngreso: '2025-10-28', fechaEgreso: '2025-10-31', estado: 'pendiente', IDUsuario: 22, IDHabitacion: 203, precio: 62000 },
-    { id: 12, fechaIngreso: '2025-11-01', fechaEgreso: '2025-11-04', estado: 'pendiente', IDUsuario: 14, IDHabitacion: 106, precio: 49000 },
-    { id: 13, fechaIngreso: '2025-11-03', fechaEgreso: '2025-11-06', estado: 'pendiente', IDUsuario: 6, IDHabitacion: 303, precio: 78000 },
-    { id: 14, fechaIngreso: '2025-11-05', fechaEgreso: '2025-11-08', estado: 'pendiente', IDUsuario: 19, IDHabitacion: 202, precio: 59000 },
-    { id: 15, fechaIngreso: '2025-11-08', fechaEgreso: '2025-11-11', estado: 'pendiente', IDUsuario: 23, IDHabitacion: 107, precio: 46000 },
-    { id: 16, fechaIngreso: '2025-11-10', fechaEgreso: '2025-11-13', estado: 'pendiente', IDUsuario: 13, IDHabitacion: 304, precio: 81000 },
-    { id: 17, fechaIngreso: '2025-11-12', fechaEgreso: '2025-11-15', estado: 'pendiente', IDUsuario: 17, IDHabitacion: 108, precio: 53000 },
-    { id: 18, fechaIngreso: '2025-11-15', fechaEgreso: '2025-11-18', estado: 'pendiente', IDUsuario: 21, IDHabitacion: 206, precio: 64000 },
-    { id: 19, fechaIngreso: '2025-11-18', fechaEgreso: '2025-11-21', estado: 'pendiente', IDUsuario: 10, IDHabitacion: 109, precio: 50000 },
-    { id: 20, fechaIngreso: '2025-11-20', fechaEgreso: '2025-11-23', estado: 'pendiente', IDUsuario: 16, IDHabitacion: 305, precio: 75000 },
-    { id: 21, fechaIngreso: '2025-12-01', fechaEgreso: '2025-12-05', estado: 'pendiente', IDUsuario: 24, IDHabitacion: 110, precio: 65000 },
-    { id: 22, fechaIngreso: '2025-12-05', fechaEgreso: '2025-12-08', estado: 'pendiente', IDUsuario: 26, IDHabitacion: 207, precio: 57000 },
-    { id: 23, fechaIngreso: '2025-12-10', fechaEgreso: '2025-12-13', estado: 'pendiente', IDUsuario: 28, IDHabitacion: 111, precio: 54000 },
-    { id: 24, fechaIngreso: '2025-12-15', fechaEgreso: '2025-12-18', estado: 'pendiente', IDUsuario: 30, IDHabitacion: 306, precio: 82000 },
-    { id: 25, fechaIngreso: '2025-12-20', fechaEgreso: '2025-12-23', estado: 'pendiente', IDUsuario: 32, IDHabitacion: 112, precio: 56000 },
-    { id: 26, fechaIngreso: '2025-12-25', fechaEgreso: '2025-12-28', estado: 'pendiente', IDUsuario: 34, IDHabitacion: 208, precio: 68000 },
-    { id: 27, fechaIngreso: '2026-01-05', fechaEgreso: '2026-01-08', estado: 'pendiente', IDUsuario: 36, IDHabitacion: 113, precio: 52000 },
-    { id: 28, fechaIngreso: '2026-01-10', fechaEgreso: '2026-01-13', estado: 'pendiente', IDUsuario: 38, IDHabitacion: 307, precio: 79000 },
-    { id: 29, fechaIngreso: '2026-01-15', fechaEgreso: '2026-01-18', estado: 'pendiente', IDUsuario: 40, IDHabitacion: 114, precio: 55000 },
-    { id: 30, fechaIngreso: '2026-01-20', fechaEgreso: '2026-01-23', estado: 'pendiente', IDUsuario: 42, IDHabitacion: 209, precio: 63000 },
-    { id: 31, fechaIngreso: '2026-02-01', fechaEgreso: '2026-02-04', estado: 'pendiente', IDUsuario: 44, IDHabitacion: 115, precio: 58000 },
-    { id: 32, fechaIngreso: '2026-02-10', fechaEgreso: '2026-02-13', estado: 'pendiente', IDUsuario: 46, IDHabitacion: 308, precio: 84000 },
-    { id: 33, fechaIngreso: '2026-02-15', fechaEgreso: '2026-02-18', estado: 'pendiente', IDUsuario: 48, IDHabitacion: 116, precio: 51000 },
-    { id: 34, fechaIngreso: '2026-02-20', fechaEgreso: '2026-02-23', estado: 'pendiente', IDUsuario: 50, IDHabitacion: 210, precio: 66000 },
-    { id: 35, fechaIngreso: '2026-03-01', fechaEgreso: '2026-03-04', estado: 'pendiente', IDUsuario: 52, IDHabitacion: 117, precio: 59000 }
-  ]);
-
+  const [reservas, setReservas] = useState([]);
   const [selectedReserva, setSelectedReserva] = useState(null);
-  const [filtroTemporal, setFiltroTemporal] = useState('semana');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [filtroTemporal, setFiltroTemporal] = useState('todos');
   const [paginaActual, setPaginaActual] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const reservasPorPagina = 10;
 
-  const hoy = new Date('2025-10-10');
+  // useEffect para obtener reservas del endpoint real
+  useEffect(() => {
+    const fetchReservas = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('No se encontró token de autenticación');
+        }
+
+        const response = await fetch('http://localhost:8080/api/reservations/bookings', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al obtener reservas: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Normalizamos los nombres de campos al formato del componente
+        const reservasFormateadas = data.reservas.map(r => ({
+          id: r.IDReserva,
+          fechaIngreso: r.fechaIngreso.split('T')[0],
+          fechaEgreso: r.fechaEgreso.split('T')[0],
+          estado: r.estado,
+          IDUsuario: r.IDUsuario,
+          IDHabitacion: r.IDHabitacion,
+          precio: r.precio
+        }));
+
+        setReservas(reservasFormateadas);
+        setError(null);
+      } catch (error) {
+        console.error('Error cargando reservas:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReservas();
+  }, []);
+
+  // 📅 Configuración de fechas de filtro
+  const hoy = new Date();
   const finSemana = new Date(hoy);
   finSemana.setDate(hoy.getDate() + 7);
   const finProximaSemana = new Date(hoy);
   finProximaSemana.setDate(hoy.getDate() + 14);
 
+  // 🧮 Filtro por estado y temporal
   const reservasFiltradas = useMemo(() => {
-    let filtradas = reservas.filter(r => r.estado === 'pendiente');
+    let filtradas = reservas;
+
+    // Filtrar por estado
+    if (filtroEstado !== 'todos') {
+      filtradas = filtradas.filter(r => r.estado === filtroEstado);
+    }
+
+    // Filtrar por tiempo (solo si no es 'todos')
+    if (filtroTemporal !== 'todos') {
+      filtradas = filtradas.filter(reserva => {
+        const fechaIngreso = new Date(reserva.fechaIngreso + 'T00:00:00');
+        switch (filtroTemporal) {
+          case 'semana':
+            return fechaIngreso >= hoy && fechaIngreso <= finSemana;
+          case 'proxima':
+            return fechaIngreso > finSemana && fechaIngreso <= finProximaSemana;
+          case 'mes':
+            return fechaIngreso > finProximaSemana;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Ordenar: primero pendientes, luego autorizadas, luego activas, luego finalizadas, luego canceladas
+    const ordenEstados = { 
+      'pendiente': 1, 
+      'autorizado': 2, 
+      'activo': 3, 
+      'finalizado': 4, 
+      'cancelado': 5 
+    };
     
-    filtradas = filtradas.filter(reserva => {
-      const fechaIngreso = new Date(reserva.fechaIngreso + 'T00:00:00');
+    return filtradas.sort((a, b) => {
+      const estadoA = ordenEstados[a.estado] || 999;
+      const estadoB = ordenEstados[b.estado] || 999;
       
-      switch(filtroTemporal) {
-        case 'semana':
-          return fechaIngreso >= hoy && fechaIngreso <= finSemana;
-        case 'proxima':
-          return fechaIngreso > finSemana && fechaIngreso <= finProximaSemana;
-        case 'mes':
-          return fechaIngreso > finProximaSemana;
-        default:
-          return true;
+      if (estadoA !== estadoB) {
+        return estadoA - estadoB;
       }
+      
+      // Si tienen el mismo estado, ordenar por fecha de ingreso
+      return new Date(a.fechaIngreso) - new Date(b.fechaIngreso);
     });
+  }, [reservas, filtroEstado, filtroTemporal]);
 
-    return filtradas.sort((a, b) => 
-      new Date(a.fechaIngreso) - new Date(b.fechaIngreso)
-    );
-  }, [reservas, filtroTemporal]);
+  // Contadores por estado - CORREGIDOS
+  const contadores = useMemo(() => {
+    return {
+      pendiente: reservas.filter(r => r.estado === 'pendiente').length,
+      autorizado: reservas.filter(r => r.estado === 'autorizado').length,
+      activo: reservas.filter(r => r.estado === 'activo').length,
+      finalizado: reservas.filter(r => r.estado === 'finalizado').length,
+      cancelado: reservas.filter(r => r.estado === 'cancelado').length,
+      todos: reservas.length
+    };
+  }, [reservas]);
 
+  // 🧩 Paginación
   const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
   const indiceInicio = (paginaActual - 1) * reservasPorPagina;
   const indiceFin = indiceInicio + reservasPorPagina;
   const reservasPaginadas = reservasFiltradas.slice(indiceInicio, indiceFin);
 
-  const handleChangeEstado = (id, nuevoEstado) => {
-    setReservas(reservas.map(r => 
-      r.id === id ? { ...r, estado: nuevoEstado } : r
-    ));
-    setSelectedReserva(null);
+  // Función para cambiar estado - SOLO para reservas pendientes
+  const handleChangeEstado = async (id, nuevoEstado) => {
+    try {
+      const token = localStorage.getItem('token');
+      const reserva = reservas.find(r => r.id === id);
+      
+      // Validar que solo se puedan cambiar reservas pendientes
+      if (reserva.estado !== 'pendiente') {
+        alert('Solo se pueden cambiar el estado de reservas pendientes');
+        return;
+      }
+
+      // Validar que solo se pueda cambiar a autorizado o cancelado
+      if (nuevoEstado !== 'autorizado' && nuevoEstado !== 'cancelado') {
+        alert('Solo se puede cambiar a autorizado o cancelado');
+        return;
+      }
+
+      // Aquí puedes hacer una llamada al backend para actualizar el estado
+       const response = await fetch(`http://localhost:8080/api/reservations/status/${id}`, {
+         method: 'PATCH',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${token}`
+         },
+         body: JSON.stringify({ estado: nuevoEstado })
+       });
+      if (!response.ok) {
+        throw new Error('No se pudo actualizar la reserva');
+      }
+      setReservas(reservas.map(r => (r.id === id ? { ...r, estado: nuevoEstado } : r)));
+      setSelectedReserva(null);
+      
+      alert(`Reserva #${id} actualizada a estado: ${nuevoEstado}`);
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      alert('Error al cambiar el estado de la reserva');
+    }
   };
 
-  const handleFiltroChange = (nuevoFiltro) => {
+  // Función para verificar si una reserva puede cambiar de estado
+  const puedeCambiarEstado = (reserva) => {
+    return reserva.estado === 'pendiente';
+  };
+
+  const handleFiltroEstadoChange = (nuevoEstado) => {
+    setFiltroEstado(nuevoEstado);
+    setPaginaActual(1);
+  };
+
+  const handleFiltroTemporalChange = (nuevoFiltro) => {
     setFiltroTemporal(nuevoFiltro);
     setPaginaActual(1);
   };
 
   const formatFecha = (fecha) => {
     const date = new Date(fecha + 'T00:00:00');
-    return date.toLocaleDateString('es-AR', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
   };
 
@@ -114,54 +211,135 @@ export default function ReservasManager() {
     return dias;
   };
 
+  const getEstadoColor = (estado) => {
+    const colores = {
+      'pendiente': '#fbbf24',      // Amarillo
+      'autorizado': '#10b981',     // Verde
+      'activo': '#3b82f6',         // Azul
+      'finalizado': '#6b7280',     // Gris
+      'cancelado': '#ef4444'       // Rojo
+    };
+    return colores[estado] || '#9ca3af';
+  };
+
+  if (loading) {
+    return (
+      <div className="reservas-container">
+        <div className="reservas-wrapper">
+          <div className="reservas-header">
+            <h1 className="reservas-title">Gestión de Reservas</h1>
+            <p className="reservas-subtitle">Cargando reservas...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="reservas-container">
+        <div className="reservas-wrapper">
+          <div className="reservas-header">
+            <h1 className="reservas-title">Gestión de Reservas</h1>
+            <p className="reservas-subtitle" style={{ color: 'red' }}>Error: {error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="reservas-container">
       <div className="reservas-wrapper">
         <div className="reservas-header">
           <h1 className="reservas-title">Gestión de Reservas</h1>
-          <p className="reservas-subtitle">Administra las reservas por prioridad temporal</p>
+          <p className="reservas-subtitle">Administra todas las reservas del sistema</p>
+        </div>
+
+        {/* Filtros por Estado - CORREGIDOS */}
+        <div className="filtros-container" style={{ marginBottom: '1rem' }}>
+          <h3 style={{ marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>Filtrar por Estado</h3>
+          <div className="filtros-buttons">
+            <button
+              onClick={() => handleFiltroEstadoChange('todos')}
+              className={`filtro-btn ${filtroEstado === 'todos' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Todas
+              <span className="filtro-count">({contadores.todos})</span>
+            </button>
+            
+            <button
+              onClick={() => handleFiltroEstadoChange('pendiente')}
+              className={`filtro-btn ${filtroEstado === 'pendiente' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Pendientes
+              <span className="filtro-count">({contadores.pendiente})</span>
+            </button>
+            
+            <button
+              onClick={() => handleFiltroEstadoChange('autorizado')}
+              className={`filtro-btn ${filtroEstado === 'autorizado' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Autorizadas
+              <span className="filtro-count">({contadores.autorizado})</span>
+            </button>
+            
+            <button
+              onClick={() => handleFiltroEstadoChange('activo')}
+              className={`filtro-btn ${filtroEstado === 'activo' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Activas
+              <span className="filtro-count">({contadores.activo})</span>
+            </button>
+            
+            <button
+              onClick={() => handleFiltroEstadoChange('finalizado')}
+              className={`filtro-btn ${filtroEstado === 'finalizado' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Finalizadas
+              <span className="filtro-count">({contadores.finalizado})</span>
+            </button>
+            
+            <button
+              onClick={() => handleFiltroEstadoChange('cancelado')}
+              className={`filtro-btn ${filtroEstado === 'cancelado' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Canceladas
+              <span className="filtro-count">({contadores.cancelado})</span>
+            </button>
+          </div>
         </div>
 
         {/* Filtros temporales */}
         <div className="filtros-container">
+          <h3 style={{ marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>Filtrar por Período</h3>
           <div className="filtros-buttons">
             <button
-              onClick={() => handleFiltroChange('semana')}
+              onClick={() => handleFiltroTemporalChange('todos')}
+              className={`filtro-btn ${filtroTemporal === 'todos' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
+            >
+              Todos los períodos
+            </button>
+            
+            <button
+              onClick={() => handleFiltroTemporalChange('semana')}
               className={`filtro-btn ${filtroTemporal === 'semana' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
             >
               Esta Semana
-              <span className="filtro-count">
-                ({reservas.filter(r => {
-                  const fecha = new Date(r.fechaIngreso + 'T00:00:00');
-                  return r.estado === 'pendiente' && fecha >= hoy && fecha <= finSemana;
-                }).length})
-              </span>
             </button>
             
             <button
-              onClick={() => handleFiltroChange('proxima')}
+              onClick={() => handleFiltroTemporalChange('proxima')}
               className={`filtro-btn ${filtroTemporal === 'proxima' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
             >
               Próxima Semana
-              <span className="filtro-count">
-                ({reservas.filter(r => {
-                  const fecha = new Date(r.fechaIngreso + 'T00:00:00');
-                  return r.estado === 'pendiente' && fecha > finSemana && fecha <= finProximaSemana;
-                }).length})
-              </span>
             </button>
             
             <button
-              onClick={() => handleFiltroChange('mes')}
+              onClick={() => handleFiltroTemporalChange('mes')}
               className={`filtro-btn ${filtroTemporal === 'mes' ? 'filtro-btn-active' : 'filtro-btn-inactive'}`}
             >
               Más de 2 Semanas
-              <span className="filtro-count">
-                ({reservas.filter(r => {
-                  const fecha = new Date(r.fechaIngreso + 'T00:00:00');
-                  return r.estado === 'pendiente' && fecha > finProximaSemana;
-                }).length})
-              </span>
             </button>
           </div>
         </div>
@@ -169,12 +347,14 @@ export default function ReservasManager() {
         {/* Lista de reservas */}
         {reservasPaginadas.length === 0 ? (
           <div className="sin-resultados">
-            <p className="sin-resultados-text">No hay reservas pendientes en este período</p>
+            <p className="sin-resultados-text">No hay reservas que coincidan con los filtros seleccionados</p>
           </div>
         ) : (
           <div className="reservas-lista">
             {reservasPaginadas.map((reserva) => {
               const diasRestantes = getDiasRestantes(reserva.fechaIngreso);
+              const puedeCambiar = puedeCambiarEstado(reserva);
+              
               return (
                 <div 
                   key={reserva.id}
@@ -184,12 +364,25 @@ export default function ReservasManager() {
                     <div className="reserva-header">
                       <div className="reserva-header-left">
                         <h3 className="reserva-id">Reserva #{reserva.id}</h3>
-                        <span className={`urgencia-badge ${
-                          diasRestantes <= 3 ? 'urgencia-alta' : 
-                          diasRestantes <= 7 ? 'urgencia-media' : 'urgencia-baja'
-                        }`}>
-                          {diasRestantes === 0 ? 'HOY' : diasRestantes === 1 ? 'MAÑANA' : `EN ${diasRestantes} DÍAS`}
+                        <span 
+                          className="urgencia-badge"
+                          style={{ backgroundColor: getEstadoColor(reserva.estado) }}
+                        >
+                          {reserva.estado.toUpperCase()}
                         </span>
+                        {!puedeCambiar && reserva.estado !== 'pendiente' && (
+                          <span className="urgencia-badge" style={{ backgroundColor: '#9ca3af' }}>
+                            NO MODIFICABLE
+                          </span>
+                        )}
+                        {(reserva.estado === 'autorizado' || reserva.estado === 'activo' || reserva.estado === 'pendiente') ? (
+                          <span className={`urgencia-badge ${
+                            diasRestantes <= 3 ? 'urgencia-alta' : 
+                            diasRestantes <= 7 ? 'urgencia-media' : 'urgencia-baja'
+                          }`}>
+                            {diasRestantes === 0 ? 'HOY' : diasRestantes === 1 ? 'MAÑANA' : diasRestantes < 0 ? `HACE ${Math.abs(diasRestantes)} DÍAS` : `EN ${diasRestantes} DÍAS`}
+                          </span>
+                        ) : null}
                       </div>
                       <p className="reserva-precio">{formatPrecio(reserva.precio)}</p>
                     </div>
@@ -230,35 +423,54 @@ export default function ReservasManager() {
 
                     {selectedReserva === reserva.id ? (
                       <div className="acciones-container">
-                        <p className="acciones-title">¿Cambiar estado de la reserva?</p>
-                        <div className="acciones-buttons">
-                          <button
-                            onClick={() => handleChangeEstado(reserva.id, 'activo')}
-                            className="btn btn-success"
-                          >
-                            Activar
-                          </button>
-                          <button
-                            onClick={() => handleChangeEstado(reserva.id, 'cancelado')}
-                            className="btn btn-danger"
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            onClick={() => setSelectedReserva(null)}
-                            className="btn btn-secondary"
-                          >
-                            Volver
-                          </button>
-                        </div>
+                        {puedeCambiar ? (
+                          <>
+                            <p className="acciones-title">¿Cambiar estado de la reserva?</p>
+                            <div className="acciones-buttons">
+                              <button
+                                onClick={() => handleChangeEstado(reserva.id, 'autorizado')}
+                                className="btn btn-success"
+                              >
+                                Autorizar
+                              </button>
+                              <button
+                                onClick={() => handleChangeEstado(reserva.id, 'cancelado')}
+                                className="btn btn-danger"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={() => setSelectedReserva(null)}
+                                className="btn btn-secondary"
+                              >
+                                Volver
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="acciones-title" style={{ color: '#ef4444' }}>
+                              Esta reserva no puede cambiar de estado
+                            </p>
+                            <div className="acciones-buttons">
+                              <button
+                                onClick={() => setSelectedReserva(null)}
+                                className="btn btn-secondary"
+                              >
+                                Volver
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ) : (
                       <button
                         onClick={() => setSelectedReserva(reserva.id)}
-                        className="btn btn-primary"
+                        className={`btn ${puedeCambiar ? 'btn-primary' : 'btn-secondary'}`}
                         style={{width: '100%'}}
+                        disabled={!puedeCambiar}
                       >
-                        Cambiar Estado
+                        {puedeCambiar ? 'Cambiar Estado' : 'No Modificable'}
                       </button>
                     )}
                   </div>
