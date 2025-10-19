@@ -33,14 +33,14 @@ export const getBookingId = async (IDUsuario) => {
 
 
 // Actualizar una reserva
-export const updateReservationByIds = async (fechaIngreso, fechaEgreso, estado, IDUsuario, IDHabitacion) => {
+export const updateReservationById = async (fechaIngreso, fechaEgreso, estado, IDReserva) => {
   try {
     const sql = `
       UPDATE reservas
       SET fechaIngreso = ?, fechaEgreso = ?, estado = ?
-      WHERE IDUsuario = ? AND IDHabitacion = ?
+      WHERE IDReserva= ?
     `;
-    const values = [fechaIngreso, fechaEgreso, estado, IDUsuario, IDHabitacion];
+    const values = [fechaIngreso, fechaEgreso, estado,IDReserva];
     const [result] = await db.query(sql, values);
     return result;
   } catch (error) {
@@ -139,5 +139,58 @@ export const updateStatusBooking = async (id, estado) => {
   } catch (error) {
     console.error('Error al cambiar estado de la reserva', error);
     throw error;
+  }
+};
+/**
+ * Obtiene una habitación libre del tipo indicado.
+ */
+export const findAvailableRoomNumber = async (idHabitacion) => {
+  const [rows] = await db.query(`
+    SELECT hn.idNumero 
+    FROM habitacion_numero hn
+    LEFT JOIN reservas r ON r.IDHabitacion = hn.idNumero 
+      AND r.estado IN ('activo', 'autorizado')
+    WHERE hn.idHabitacion = ?
+      AND r.IDReserva IS NULL
+    LIMIT 1
+  `, [idHabitacion]);
+  return rows.length ? rows[0].idNumero : null;
+};
+
+/**
+ * Resta una unidad al campo available del tipo de habitación.
+ */
+export const decreaseAvailableCount = async (idHabitacion) => {
+  await db.query(`
+    UPDATE habitacion 
+    SET available = GREATEST(available - 1, 0)
+    WHERE id = ?
+  `, [idHabitacion]);
+};
+
+/**
+ * Suma una unidad al campo available del tipo de habitación.
+ */
+export const increaseAvailableCount = async (idHabitacion) => {
+  await db.query(`
+    UPDATE habitacion 
+    SET available = available + 1
+    WHERE id = ?
+  `, [idHabitacion]);
+};
+
+/**
+ * Marca la habitación de la reserva como liberada (al finalizar o cancelar).
+ */
+export const releaseRoomNumber = async (idReserva) => {
+  const [[reserva]] = await db.query(`
+    SELECT hn.idHabitacion
+    FROM reservas r
+    JOIN habitacion_numero hn ON hn.idNumero = r.IDHabitacion
+    WHERE r.IDReserva = ?
+  `, [idReserva]);
+
+  if (reserva) {
+    await increaseAvailableCount(reserva.idHabitacion);
   }
 };

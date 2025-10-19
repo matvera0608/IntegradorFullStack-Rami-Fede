@@ -48,7 +48,7 @@ const login = async (req, res) => {
       }
       const payload = { id: usuario.ID, nombre: usuario.nombre, mail: usuario.mail, rol: usuario.rol };
      const token = jwt.sign(payload, process.env.SECRET_KEY, { 
-        expiresIn: process.env.TOKEN_EXPIRATION || '24h', 
+        expiresIn: '1h', 
       });
 
       return res.status(200).json({

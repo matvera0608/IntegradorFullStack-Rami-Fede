@@ -4,74 +4,76 @@ import {
   insertReservation,
   getBookingId,
   getAllReservations,
-  updateReservationByIds,
-  cancelReservationByIds,getActiveReservations,syncReservationsModel
+  updateReservationById,
+  cancelReservationByIds,getActiveReservations,syncReservationsModel,findAvailableRoomNumber,
+  decreaseAvailableCount,
+  releaseRoomNumber
 } from "../models/reservations.model.js";
-import { response } from "express";
 
-/// Crear reserva
+
 export const createReservation = async (req, res) => {
   try {
-    console.log('🔍 Iniciando createReservation');
-    console.log('📦 Body completo:', req.body);
-    console.log('👤 Usuario del token:', req.user);
+    console.log("🚀 Iniciando creación de reserva inteligente");
 
     const { fechaIngreso, fechaEgreso, estado, IDHabitacion, precio } = req.body;
-    const IDUsuario = req.user.IDUsuario || req.user.id; // Intenta con ambos
+    const IDUsuario = req.user.IDUsuario || req.user.id;
 
-    console.log('📊 Datos extraídos:', {
-      fechaIngreso,
-      fechaEgreso,
-      estado,
-      IDHabitacion,
-      precio,
-      IDUsuario
-    });
-
-    // Validación de datos obligatorios
+    // Validación básica
     if (!fechaIngreso || !fechaEgreso || !estado || !IDHabitacion || !precio) {
-      console.log('❌ Faltan datos obligatorios');
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Faltan datos obligatorios",
-        datosRecibidos: req.body,
-        datosRequeridos: ['fechaIngreso', 'fechaEgreso', 'estado', 'IDHabitacion', 'precio']
+        datosRequeridos: ["fechaIngreso", "fechaEgreso", "estado", "IDHabitacion", "precio"],
       });
     }
 
     if (!IDUsuario) {
-      console.log('❌ Usuario no autenticado');
-      return res.status(401).json({ 
-        message: "Usuario no autenticado",
-        user: req.user 
-      });
+      return res.status(401).json({ message: "Usuario no autenticado" });
     }
 
-    console.log('🚀 Llamando a insertReservation...');
-    const result = await insertReservation(fechaIngreso, fechaEgreso, estado, IDUsuario, IDHabitacion, precio);
+    // 1️⃣ Buscar una habitación disponible del tipo solicitado
+    const idNumero = await findAvailableRoomNumber(IDHabitacion);
 
-    console.log('✅ Reserva creada exitosamente');
+    if (!idNumero) {
+      console.warn(`⚠️ No hay habitaciones disponibles para tipo ${IDHabitacion}`);
+      return res.status(409).json({ message: "No hay habitaciones disponibles de este tipo" });
+    }
+
+    // 2️⃣ Registrar la reserva con el idNumero asignado
+    const result = await insertReservation(
+      fechaIngreso,
+      fechaEgreso,
+      estado,
+      IDUsuario,
+      idNumero, // 👈 aquí va la habitación asignada
+      precio
+    );
+
+    // 3️⃣ Reducir en 1 la disponibilidad del tipo de habitación
+    await decreaseAvailableCount(IDHabitacion);
+
+    console.log(`✅ Reserva creada exitosamente con habitación ${idNumero}`);
     res.status(201).json({
       message: "Reserva creada con éxito",
       insertId: result.insertId,
       reserva: {
+        IDReserva: result.insertId,
         fechaIngreso,
         fechaEgreso,
         estado,
         IDUsuario,
         IDHabitacion,
-        precio
-      }
+        idNumeroAsignado: idNumero,
+        precio,
+      },
     });
   } catch (error) {
-    console.error('💥 Error en createReservation:', error);
+    console.error("💥 Error en createReservation:", error);
     res.status(500).json({
       message: "Error al crear la reserva",
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-};
-// Obtener reservas (solo las del usuario logueado)
+};// Obtener reservas (solo las del usuario logueado)
 export const getReservations = async (req, res) => {
   try {
     const IDUsuario = req.user.id;
@@ -86,26 +88,22 @@ export const getReservations = async (req, res) => {
 };
 
 // Actualizar reserva
-export const updateReservation = async (req, res) => {
+export const updateStatus = async (req, res) => {
   try {
-    const { fechaIngreso, fechaEgreso, estado } = req.body;
-    const { IDHabitacion } = req.params;
-    const IDUsuario = req.user.IDUsuario;
+    const { id } = req.params;
+    const { estado } = req.body;
+    console.log("🔹 updateStatus id:", id, "estado:", estado);
 
-    const result = await updateReservationByIds(fechaIngreso, fechaEgreso, estado, IDUsuario, IDHabitacion);
+    const result = await updateStatusBooking(id, estado);
+    console.log("🔹 Resultado updateStatusBooking:", result);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Reserva no encontrada" });
-    }
-
-    res.status(200).json({ message: "Reserva actualizada con éxito" });
+    res.status(200).json({ message: 'Estado actualizado correctamente' });
   } catch (error) {
-    res.status(500).json({
-      message: "Error al actualizar la reserva",
-      error: error.message
-    });
+    console.error("❌ Error en updateStatus:", error);
+    res.status(500).json({ error: 'Error al actualizar reserva' });
   }
 };
+
 
 // Cancelar reserva
 export const deleteReservation = async (req, res) => {
@@ -196,16 +194,47 @@ export const syncReservation = async (req, res) => {
   }
 };
 
-export const updateStatus = async (req, res) => {
+export const updateStatusAuto = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
 
+    // Actualizamos el estado de la reserva
     await updateStatusBooking(id, estado);
 
-    res.status(200).json({ message: 'Estado actualizado correctamente' });
+    // Solo liberamos la habitación si la reserva finalizó o se canceló
+    if (estado === "finalizado" || estado === "cancelado") {
+      await releaseRoomNumber(id);
+      console.log(`🟢 Habitación liberada automáticamente para reserva ${id}`);
+    }
+
+    res.status(200).json({ message: "Estado actualizado automáticamente correctamente" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al actualizar reserva' });
+    console.error("❌ Error en updateStatusAuto:", error);
+    res.status(500).json({ error: "Error al actualizar estado automáticamente" });
+  }
+};
+
+export const updateReservation = async (req, res) => {
+  try {
+    const { id } = req.params; // IDReserva
+    const { fechaIngreso, fechaEgreso, estado } = req.body;
+
+    if (!fechaIngreso || !fechaEgreso || !estado) {
+      return res.status(400).json({ message: "Faltan datos obligatorios para actualizar la reserva" });
+    }
+    console.log("IDReserva:", id);
+    console.log("Body recibido:", req.body);
+
+    const result = await updateReservationById(fechaIngreso, fechaEgreso, estado, id);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Reserva no encontrada" });
+    }
+
+    res.status(200).json({ message: "Reserva actualizada correctamente" });
+  } catch (error) {
+    console.error("❌ Error en updateReservation:", error);
+    res.status(500).json({ message: "Error al actualizar la reserva", error: error.message });
   }
 };

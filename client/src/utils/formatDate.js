@@ -31,3 +31,15 @@ export const formatearFechaHora = (fechaString) => {
     };
     return fecha.toLocaleDateString('es-ES', opciones);
 };
+/**
+ * ✅ Función para formatear fecha al formato "yyyy-MM-dd"
+ * Ideal para inputs de tipo="date"
+ * @param {string|Date} fecha - Fecha en formato ISO o Date
+ * @returns {string} Fecha en formato "yyyy-MM-dd"
+ */
+export const formatearFechaInput = (fecha) => {
+    if (!fecha) return '';
+    const dateObj = new Date(fecha);
+    // Asegura formato compatible con input type="date"
+    return dateObj.toISOString().split('T')[0];
+};

@@ -2,7 +2,7 @@ import { findUsuarioById } from '../models/usuarios.model.js';
 import { allUsuario } from '../models/usuarios.model.js';
 import { updateUsuario } from '../models/usuarios.model.js';
 import { deleteUsuario } from '../models/usuarios.model.js';
-
+import { info, Allinfo } from '../models/usuarios.model.js';
 // Obtener todos los usuarios (solo admin o propósitos específicos)
 export const getAllUsuarios = async (req, res) => {
   try {
@@ -67,5 +67,26 @@ export const eliminarUsuario = async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar Usuario:', error);
     res.status(500).json({ mensaje: 'Error al eliminar el Usuario' });
+  }
+};
+
+export const userInfo = async (req, res) =>{
+    try {
+    const IDUsuario = req.user.IDUsuario || req.user.id;
+    const [rows] = await info(IDUsuario);
+    console.log(rows);
+    return res.json({rows})
+    } catch (error) {
+      res.status(500).json({ mensaje: 'Error al obtener los datos ' });
+      console.log(error);
+    }
+  }
+export const allUserInfo = async (req, res) => {
+  try {
+    const rows = await Allinfo(); // ✅ no usar [rows] ni envolver
+    res.json({ rows }); // ✅ devuelve el array completo
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al obtener la información de usuarios' });
+    console.log(error);
   }
 };

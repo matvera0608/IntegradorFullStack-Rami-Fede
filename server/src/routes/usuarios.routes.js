@@ -1,14 +1,14 @@
 
-import { getAllUsuarios } from '../controllers/usuarios.controller.js';
-import {getUsuarioById} from '../controllers/usuarios.controller.js';
-import { actualizarUsuario } from '../controllers/usuarios.controller.js';
-import { eliminarUsuario } from '../controllers/usuarios.controller.js';
+import { userInfo,allUserInfo, getAllUsuarios,getUsuarioById,actualizarUsuario,eliminarUsuario } from '../controllers/usuarios.controller.js'; 
 import {validateUpdateUsuario} from '../middleware/usuarios.middleware.js'
 import{authMiddleware} from '../middleware/auth.middleware.js';
 import { Router } from 'express';
 const router = Router();
-router.get('/users/me', authMiddleware,getUsuarioById);
-router.put('/users/me', authMiddleware,validateUpdateUsuario, actualizarUsuario);
-router.delete('/users/me',authMiddleware,eliminarUsuario);
+
+router.get('/users/:id', authMiddleware,getUsuarioById);
+router.put('/users/:id', authMiddleware,validateUpdateUsuario, actualizarUsuario);
+router.delete('/users/:id',authMiddleware,eliminarUsuario);
+router.get('/infoUser/:id',authMiddleware, userInfo)
+router.get('/AllUserInfo', allUserInfo)
 
 export default router;

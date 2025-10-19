@@ -76,3 +76,83 @@ export const useRooms = () => {
     reservasActivas
   };
 };
+
+export const useRoomStatus = () => {
+  const [roomsStatus, setRoomsStatus] = useState([]);
+  const [reservasActivas, setReservasActivas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      try {
+        setLoading(true);
+
+        // 🔹 1. Obtener habitaciones
+        const resRooms = await fetch('http://localhost:8080/api/room/rooms');
+        if (!resRooms.ok) throw new Error('Error al obtener habitaciones');
+        const dataRooms = await resRooms.json();
+
+        // 🔹 2. Obtener estado de ocupación
+        const resStatus = await fetch('http://localhost:8080/api/room/status');
+        if (!resStatus.ok) throw new Error('Error al obtener estado de habitaciones');
+        const dataStatus = await resStatus.json();
+
+        // Crear un mapa por idHabitacion para unir los datos
+        const statusMap = new Map(dataStatus.status.map(s => [s.idHabitacion, s]));
+
+        // 🔹 3. Combinar habitaciones + estado
+        const combinedRooms = dataRooms.rooms.map(room => {
+          const estado = statusMap.get(room.id) || {
+            ocupadas: 0,
+            disponibles: room.available,
+            total: room.available
+          };
+
+          return {
+            id: room.id,
+            type: room.type,
+            image: room.image,
+            description: room.description,
+            features: room.features.split(', ').map(f => f.trim()),
+            total: estado.total,
+            ocupadas: estado.ocupadas,
+            disponibles: estado.disponibles,
+            isFull: estado.disponibles <= 0 // 🔴 true si está lleno
+          };
+        });
+
+        setRoomsStatus(combinedRooms);
+
+        // 🔹 4. Obtener reservas activas
+        try {
+          const token = localStorage.getItem('token');
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+          const resReservas = await fetch('http://localhost:8080/api/reservations/active', { headers });
+          if (resReservas.ok) {
+            const dataReservas = await resReservas.json();
+            setReservasActivas(dataReservas.reservas || []);
+          } else {
+            console.warn('No se pudieron obtener reservas activas');
+            setReservasActivas([]);
+          }
+        } catch (err) {
+          console.warn('Error obteniendo reservas activas:', err);
+          setReservasActivas([]);
+        }
+
+      } catch (err) {
+        console.error('Error en useRoomStatus:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoomData();
+  }, []);
+
+  return { roomsStatus, reservasActivas, loading, error };
+};

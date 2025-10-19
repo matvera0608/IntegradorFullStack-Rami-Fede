@@ -357,9 +357,9 @@ const decodeToken = (token) => {
  */
 export const validarPuedeReservar = async (token) => {
     try {
-        // Decodificar el token para obtener el ID del usuario PRIMERO
-       const decodedToken = decodeToken(token);
-        const userId = decodedToken?.id;  // ✅ Solo usa esta propiedad
+        // ✅ Decodificar el token para obtener el ID del usuario
+        const decodedToken = decodeToken(token);
+        const userId = decodedToken?.id;
 
         if (!userId) {
             throw new Error('No se pudo obtener el ID del usuario del token');
@@ -367,7 +367,7 @@ export const validarPuedeReservar = async (token) => {
 
         console.log('🔑 ID Usuario obtenido del token:', userId);
 
-        // 🔄 Usar el endpoint que trae las reservas del usuario específico
+        // 🔄 Obtener todas las reservas del usuario
         const response = await fetch(`http://localhost:8080/api/reservations/booking/${userId}`, {
             method: 'GET',
             headers: {
@@ -381,33 +381,51 @@ export const validarPuedeReservar = async (token) => {
         }
 
         const todasLasReservas = await response.json();
-
         console.log('📋 TODAS las reservas del usuario:', todasLasReservas);
 
-        // 🔍 Filtrar reservas que NO estén canceladas o finalizadas
+        // 📅 Fecha actual normalizada
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        // 🔍 Filtrar solo reservas activas o pendientes que aún no finalizaron
         const reservasActivas = todasLasReservas.filter(reserva => {
             const estado = reserva.estado?.toLowerCase();
-            return !['cancelada', 'finalizada', 'rechazada'].includes(estado);
+            const fechaEgreso = new Date(reserva.fechaEgreso);
+            fechaEgreso.setHours(0, 0, 0, 0);
+
+            // Excluir canceladas, finalizadas, rechazadas o pasadas
+            const esActiva =
+                !['cancelado', 'finalizado'].includes(estado) &&
+                fechaEgreso >= hoy;
+
+            if (esActiva) {
+                console.log(`🟡 Reserva considerada activa/pending: ID ${reserva.IDReserva}, estado=${estado}, egreso=${reserva.fechaEgreso}`);
+            } else {
+                console.log(`⚪ Reserva omitida: ID ${reserva.IDReserva}, estado=${estado}, egreso=${reserva.fechaEgreso}`);
+            }
+
+            return esActiva;
         });
 
-        console.log('🔍 Reservas activas/pendientes:', reservasActivas);
+        console.log('🔍 Reservas activas/pendientes (no vencidas):', reservasActivas);
 
-        const tieneReservaActiva = reservasActivas.length > 0;
-        
-        if (tieneReservaActiva) {
-            // Encontrar la reserva más reciente (con fecha de egreso más lejana)
+        // 🚫 Si hay reservas activas o pendientes, bloquear nueva reserva
+        if (reservasActivas.length > 0) {
+            // Elegir la más reciente (fecha de egreso más lejana)
             const reservaActual = reservasActivas.reduce((masReciente, reserva) => {
-                return new Date(reserva.fechaEgreso) > new Date(masReciente.fechaEgreso) 
-                    ? reserva : masReciente;
+                return new Date(reserva.fechaEgreso) > new Date(masReciente.fechaEgreso)
+                    ? reserva
+                    : masReciente;
             });
-            
+
             return {
                 puedeReservar: false,
                 motivo: `No puedes realizar una nueva reserva mientras tengas reservas activas o pendientes. Tu reserva actual (${reservaActual.estado}) finaliza el ${formatearFecha(reservaActual.fechaEgreso)}.`,
-                reservaActual: reservaActual
+                reservaActual
             };
         }
 
+        // ✅ Si no tiene reservas activas vigentes
         return {
             puedeReservar: true,
             motivo: 'Puedes realizar una nueva reserva',
@@ -415,10 +433,11 @@ export const validarPuedeReservar = async (token) => {
         };
 
     } catch (error) {
-        console.error('Error al validar si puede reservar:', error);
+        console.error('❌ Error al validar si puede reservar:', error);
         throw error;
     }
 };
+
 /**
  * Función auxiliar para formatear fechas en formato legible
  * @param {string} fecha - Fecha en formato YYYY-MM-DD

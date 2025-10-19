@@ -11,54 +11,63 @@ export default function ReservasManager() {
   const [error, setError] = useState(null);
   const reservasPorPagina = 10;
 
-  // useEffect para obtener reservas del endpoint real
   useEffect(() => {
-    const fetchReservas = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('No se encontró token de autenticación');
-        }
+  const fetchReservasYUsuarios = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No se encontró token de autenticación');
 
-        const response = await fetch('http://localhost:8080/api/reservations/bookings', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+      // 🔹 1️⃣ Traer todas las reservas
+      const resReservas = await fetch('http://localhost:8080/api/reservations/bookings', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
+      if (!resReservas.ok) throw new Error(`Error al obtener reservas: ${resReservas.status}`);
+      const dataReservas = await resReservas.json();
 
-        if (!response.ok) {
-          throw new Error(`Error al obtener reservas: ${response.status}`);
-        }
+      const reservasFormateadas = dataReservas.reservas.map(r => ({
+        id: r.IDReserva,
+        fechaIngreso: r.fechaIngreso.split('T')[0],
+        fechaEgreso: r.fechaEgreso.split('T')[0],
+        estado: r.estado,
+        IDUsuario: r.IDUsuario,
+        IDHabitacion: r.IDHabitacion,
+        precio: r.precio
+      }));
+    // 🔹 2️⃣ Traer info de usuarios + tipo de habitación
+    const resUsuarios = await fetch('http://localhost:8080/api/usuarios/AllUserInfo', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+    });
+    if (!resUsuarios.ok) throw new Error('Error al obtener info de usuarios');
+    const dataUsuarios = await resUsuarios.json(); 
+    const usuariosArray = dataUsuarios.rows; // ✅ Extraer array de rows
 
-        const data = await response.json();
+    // 🔹 3️⃣ Mapear reservas con nombreUsuario y tipoHabitacion
+    // Asumiendo que el orden coincide: primera reserva -> primera fila, etc.
+    const reservasConInfo = reservasFormateadas.map((reserva, index) => {
+      const info = usuariosArray[index] || {};
+      return {
+        ...reserva,
+        nombreUsuario: info.nombreUsuario || 'Desconocido',
+        tipoHabitacion: info.tipoHabitacion || 'Desconocida'
+      };
+    });
+      setReservas(reservasConInfo);
+      setError(null);
+    } catch (error) {
+      console.error('Error cargando reservas y usuarios:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Normalizamos los nombres de campos al formato del componente
-        const reservasFormateadas = data.reservas.map(r => ({
-          id: r.IDReserva,
-          fechaIngreso: r.fechaIngreso.split('T')[0],
-          fechaEgreso: r.fechaEgreso.split('T')[0],
-          estado: r.estado,
-          IDUsuario: r.IDUsuario,
-          IDHabitacion: r.IDHabitacion,
-          precio: r.precio
-        }));
+  fetchReservasYUsuarios();
+}, []);
 
-        setReservas(reservasFormateadas);
-        setError(null);
-      } catch (error) {
-        console.error('Error cargando reservas:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchReservas();
-  }, []);
 
   // 📅 Configuración de fechas de filtro
   const hoy = new Date();
@@ -210,7 +219,6 @@ export default function ReservasManager() {
     const dias = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
     return dias;
   };
-
   const getEstadoColor = (estado) => {
     const colores = {
       'pendiente': '#fbbf24',      // Amarillo
@@ -404,21 +412,21 @@ export default function ReservasManager() {
                         </div>
                       </div>
 
-                      <div className="detalle-item">
-                        <i className="bi bi-person detalle-icon"></i>
-                        <div>
-                          <p className="detalle-label">Usuario</p>
-                          <p className="detalle-value">ID: {reserva.IDUsuario}</p>
-                        </div>
-                      </div>
+                <div className="detalle-item">
+                  <i className="bi bi-person detalle-icon"></i>
+                  <div>
+                    <p className="detalle-label">Usuario</p>
+                    <p className="detalle-value">{reserva.nombreUsuario}</p>
+                  </div>
+                </div>
 
-                      <div className="detalle-item">
-                        <i className="bi bi-door-closed detalle-icon"></i>
-                        <div>
-                          <p className="detalle-label">Habitación</p>
-                          <p className="detalle-value">#{reserva.IDHabitacion}</p>
-                        </div>
-                      </div>
+                <div className="detalle-item">
+                  <i className="bi bi-door-closed detalle-icon"></i>
+                  <div>
+                    <p className="detalle-label">Habitación</p>
+                    <p className="detalle-value">{reserva.tipoHabitacion}</p>
+                  </div>
+                </div>
                     </div>
 
                     {selectedReserva === reserva.id ? (

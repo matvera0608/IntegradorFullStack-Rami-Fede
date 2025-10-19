@@ -19,7 +19,7 @@ router.put('/sync', syncReservation);
 
 // GET /reservations → Listar reservas del usuario
 router.get('/booking/:id', authMiddleware, getReservations);
-
+//cambiar estado reserva
 router.patch('/status/:id', updateStatus);
 // PUT /reservations/:id → Modificar reserva
 router.put('/booking/:id', authMiddleware, validateReservationId, updateReservation);

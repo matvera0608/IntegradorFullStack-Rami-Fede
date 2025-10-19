@@ -48,4 +48,39 @@ export const deleteUsuario = async (id) => {
 };
 
 
+export const info = async (IDUsuario) => {
+  const query = `
+    SELECT 
+      u.nombre AS nombreUsuario,
+      h.type AS tipoHabitacion
+    FROM usuario u
+    INNER JOIN reservas r ON u.ID = r.IDUsuario
+    INNER JOIN habitacion_numero hn ON r.IDHabitacion = hn.idNumero
+    INNER JOIN habitacion h ON hn.idHabitacion = h.id
+    WHERE u.ID = ?
+  `;
+  try {
+    const [rows] = await db.query(query, [IDUsuario]);
+    return [rows];
+  } catch (error) {
+    throw error;
+  }
+};
+export const Allinfo = async () => {
+  const query = `
+    SELECT 
+      u.nombre AS nombreUsuario,
+      h.type AS tipoHabitacion
+    FROM usuario u
+    INNER JOIN reservas r ON u.ID = r.IDUsuario
+    INNER JOIN habitacion_numero hn ON r.IDHabitacion = hn.idNumero
+    INNER JOIN habitacion h ON hn.idHabitacion = h.id
+  `;
+  try {
+    const [rows] = await db.query(query);
+    return rows; // ✅ No hace falta envolver en [rows]
+  } catch (error) {
+    throw error;
+  }
+};
 
