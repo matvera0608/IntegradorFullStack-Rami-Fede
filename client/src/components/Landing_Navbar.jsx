@@ -54,15 +54,22 @@ function Navbar() {
             </li>
 
             {/* Solo mostrar los links de rol si NO estamos en la raíz */}
-            {!isRootPage && isAdmin && (
-              <li className="nav-item">
-                <Link className="nav-link" to="/admin">
-                  <i className="bi bi-shield-lock me-1"></i>
-                  <p>Admin Panel</p>
-                </Link>
-              </li>
+                    {!isRootPage && isAdmin && (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/admin">
+                    <i className="bi bi-shield-lock me-1"></i>
+                    <p>Panel Reservas</p>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/adminOrders">
+                    <i className="bi bi-shield-lock me-1"></i>
+                    <p>Panel Buffet</p>
+                  </Link>
+                </li>
+              </>
             )}
-
             {!isRootPage && isUser && (
               <li className="nav-item">
                 <Link className="nav-link" to="/home">

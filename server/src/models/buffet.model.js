@@ -1,4 +1,5 @@
 import db from '../config/db.js';
+import { insertDetallePedido } from './detallePedido.model.js';
 
 // Traer todo el catálogo
 export const AllBuffet = async () => {
@@ -59,4 +60,17 @@ export const eliminarBuffet = async (id) => {
         console.error(`Error al eliminar el item del catálogo con ID ${id}:`, error);
         throw error;
     }
+};
+
+export const findBuffetById = async (ID) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM buffet WHERE ID = ?`,
+      [ID]
+    );
+    return rows[0];
+  } catch (error) {
+    console.error(`❌ Error al obtener producto ${ID}:`, error);
+    throw error;
+  }
 };

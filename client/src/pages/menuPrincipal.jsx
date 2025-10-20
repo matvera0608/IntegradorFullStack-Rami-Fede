@@ -352,7 +352,7 @@ const MenuPrincipal = () => {
               <h3>
                 <i className="fas fa-clipboard-list menu-me-2"></i>Últimos Pedidos
               </h3>
-              <a href="#" className="menu-view-all">Ver historial</a>
+              <a href="/myOrders" className="menu-view-all">Ver historial</a>
             </div>
             
             <div className="menu-card-content">

@@ -10,12 +10,16 @@ import Reservation from './pages/Reservation';
 import ReservationManager from './pages/ReservationsMagnament'; 
 import MyBooking from './pages/mybooking';
 import Buffet from './pages/Buffet';
+import UserOrders from './pages/ordersByUser'; 
+import AdminOrders from './pages/AdminOrders';
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
         <Navbar />
         <Routes>
+          <Route path="/adminOrders" element={<AdminOrders />} />
+          <Route path="/myOrders" element={<UserOrders />} />
           <Route path="/buffet" element={<Buffet />} />
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
