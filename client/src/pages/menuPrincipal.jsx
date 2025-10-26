@@ -18,6 +18,15 @@ const MenuPrincipal = () => {
   const [mensajeBloqueo, setMensajeBloqueo] = useState('');
   const [reservaActual, setReservaActual] = useState(null);
   
+  // 🔹 Estados para datos dinámicos
+  const [ultimasReservas, setUltimasReservas] = useState([]);
+  const [ultimosPedidos, setUltimosPedidos] = useState([]);
+  const [estadisticas, setEstadisticas] = useState({
+    totalReservas: 0,
+    totalPedidos: 0,
+    reservasActivas: 0
+  });
+  
   // Determinar el estado de la reserva para los estilos
   const getEstadoReserva = () => {
     if (!reservaActual) return 'sin-reserva';
@@ -98,6 +107,125 @@ const MenuPrincipal = () => {
     };
 
     cargarDetallesReserva();
+  }, []);
+
+  // 🔹 Cargar últimas 2 reservas y últimos 2 pedidos
+  useEffect(() => {
+    const cargarReservasYPedidos = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // Obtener userId del token decodificado
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const userId = tokenPayload.userId || tokenPayload.sub || tokenPayload.id;
+
+        console.log('🔍 UserID extraído:', userId);
+
+        // 🔹 1. Obtener las reservas del usuario
+        const responseReservas = await fetch(`http://localhost:8080/api/reservations/booking/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (responseReservas.ok) {
+          const reservasData = await responseReservas.json();
+          console.log('📋 Reservas recibidas:', reservasData);
+          
+            // 🔹 Procesar reservas y obtener tipo de habitación
+            const reservasConTipo = await Promise.all(
+              reservasData.map(async (reserva) => {
+                try {
+                  console.log(reserva.IDHabitacion);
+                  const responseTipo = await fetch(`http://localhost:8080/api/room/type/${reserva.IDHabitacion}`);
+                  if (responseTipo.ok) {
+                    const tipoData = await responseTipo.json();
+                    return {
+                      ...reserva,
+                      tipoHabitacion: tipoData.type  // fallback si no viene type
+                    };
+                  } else {
+                    console.warn(`No se encontró tipo para habitación ${reserva.IDHabitacion} (status ${responseTipo.status})`);
+                  }
+                } catch (error) {
+                  console.error(`Error al obtener tipo de habitación ${reserva.IDHabitacion}:`, error);
+                }
+
+                // Siempre retornar la reserva, aunque haya error
+                return {
+                  ...reserva,
+                  tipoHabitacion: 'Standard'
+                };
+              })
+            );
+
+
+          // Ordenar por fecha de ingreso más reciente y tomar las últimas 2
+          const reservasOrdenadas = reservasConTipo
+            .sort((a, b) => {
+              const fechaA = new Date(a.fechaIngreso);
+              const fechaB = new Date(b.fechaIngreso);
+              return fechaB - fechaA;
+            })
+            .slice(0, 2);
+          
+          setUltimasReservas(reservasOrdenadas);
+          
+          // Actualizar estadísticas de reservas
+          const reservasActivas = reservasData.filter(r => 
+            r.estado?.toLowerCase() === 'activo'
+          ).length;
+          
+          setEstadisticas(prev => ({
+            ...prev,
+            totalReservas: reservasData.length,
+            reservasActivas: reservasActivas
+          }));
+        } else {
+          console.error('❌ Error al obtener reservas:', responseReservas.status);
+        }
+
+        // 🔹 2. Obtener los pedidos del usuario
+        const responsePedidos = await fetch('http://localhost:8080/api/orders/order', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (responsePedidos.ok) {
+          const pedidosData = await responsePedidos.json();
+          console.log('🍽️ Pedidos recibidos:', pedidosData);
+          
+          // Ordenar por fecha de pedido más reciente y tomar los últimos 2
+          const pedidosOrdenados = pedidosData
+            .sort((a, b) => {
+              const fechaA = new Date(a.fechaPedido);
+              const fechaB = new Date(b.fechaPedido);
+              return fechaB - fechaA;
+            })
+            .slice(0, 2);
+          
+          setUltimosPedidos(pedidosOrdenados);
+          
+          // Actualizar estadísticas de pedidos
+          setEstadisticas(prev => ({
+            ...prev,
+            totalPedidos: pedidosData.length
+          }));
+        } else {
+          console.error('❌ Error al obtener pedidos:', responsePedidos.status);
+        }
+
+      } catch (error) {
+        console.error('❌ Error al cargar reservas y pedidos:', error);
+      }
+    };
+
+    cargarReservasYPedidos();
   }, []);
 
   const handlePedido = () => {
@@ -203,6 +331,30 @@ const MenuPrincipal = () => {
     }
   };
 
+  // 🔹 Función para obtener el texto del estado de la reserva en español
+  const getEstadoTexto = (estado) => {
+    const estadosMap = {
+      'activo': 'Activa',
+      'pendiente': 'Pendiente',
+      'autorizado': 'Autorizada',
+      'cancelado': 'Cancelada',
+      'finalizado': 'Finalizada'
+    };
+    return estadosMap[estado?.toLowerCase()] || estado || 'Confirmada';
+  };
+
+  // 🔹 Función para obtener el texto del estado del pedido en español
+  const getEstadoPedidoTexto = (estado) => {
+    const estadosMap = {
+      'pendiente': 'Pendiente',
+      'en preparación': 'En Preparación',
+      'en camino': 'En Camino',
+      'entregado': 'Entregado',
+      'cancelado': 'Cancelado'
+    };
+    return estadosMap[estado?.toLowerCase()] || estado || 'Entregado';
+  };
+
   if (loading || verificandoReserva) {
     return (
       <div className="menu-container">
@@ -269,7 +421,8 @@ const MenuPrincipal = () => {
                 </div>
               </div>
             </div>
-<div className="menu-col-md-5">
+
+            <div className="menu-col-md-5">
               <div className="menu-card menu-action-card menu-h-100 menu-border-0 menu-shadow">
                 <div className="menu-card-body menu-text-center">
                   <div className="menu-action-icon menu-secondary-icon menu-mx-auto menu-mb-3">
@@ -313,7 +466,9 @@ const MenuPrincipal = () => {
           </div>
         </section>
 
+        {/* 🔹 SECCIÓN CON DATOS DINÁMICOS */}
         <section className="menu-dashboard-grid">
+          {/* 🔹 ÚLTIMAS RESERVAS - DATOS DINÁMICOS */}
           <div className="menu-dashboard-card">
             <div className="menu-card-header">
               <h3>
@@ -323,30 +478,53 @@ const MenuPrincipal = () => {
             </div>
             
             <div className="menu-card-content">
-              <div className="menu-reservation-item menu-active">
-                <div className="menu-reservation-info">
-                  <h4>Habitación Deluxe #205</h4>
-                  <p>25 - 28 Agosto 2025</p>
-                  <p>2 huéspedes</p>
+              {ultimasReservas.length > 0 ? (
+                ultimasReservas.map((reserva, index) => {
+                  return (
+                    <div key={reserva.IDReserva || index} className={`menu-reservation-item ${index === 0 ? 'menu-active' : ''}`}>
+                      <div className="menu-reservation-info">
+                        <h4>Habitación {reserva.tipoHabitacion || 'Standard'} #{reserva.IDHabitacion}</h4>
+                        <p>
+                          {new Date(reserva.fechaIngreso).toLocaleDateString('es-ES', { 
+                            day: 'numeric', 
+                            month: 'long' 
+                          })} - {' '}
+                          {new Date(reserva.fechaEgreso).toLocaleDateString('es-ES', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric' 
+                          })}
+                        </p>
+                        <p>Precio: ${reserva.precio}</p>
+                      </div>
+                      <div className="menu-reservation-status">
+                        <span className={`menu-status-badge ${
+                          reserva.estado?.toLowerCase() === 'activo' || reserva.estado?.toLowerCase() === 'autorizado'
+                            ? 'menu-confirmed' 
+                            : reserva.estado?.toLowerCase() === 'pendiente' 
+                            ? 'menu-pending'
+                            : 'menu-confirmed'
+                        }`}>
+                          {getEstadoTexto(reserva.estado)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="menu-reservation-item">
+                  <div className="menu-reservation-info">
+                    <p className="menu-text-muted">
+                      <i className="fas fa-calendar-times menu-me-2"></i>
+                      No tienes reservas recientes
+                    </p>
+                  </div>
                 </div>
-                <div className="menu-reservation-status">
-                  <span className="menu-status-badge menu-confirmed">Confirmada</span>
-                </div>
-              </div>
-              
-              <div className="menu-reservation-item">
-                <div className="menu-reservation-info">
-                  <h4>Habitación Suite #301</h4>
-                  <p>15 - 17 Septiembre 2025</p>
-                  <p>2 huéspedes</p>
-                </div>
-                <div className="menu-reservation-status">
-                  <span className="menu-status-badge menu-pending">Pendiente</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
+          {/* 🔹 ÚLTIMOS PEDIDOS - DATOS DINÁMICOS */}
           <div className="menu-dashboard-card">
             <div className="menu-card-header">
               <h3>
@@ -356,30 +534,62 @@ const MenuPrincipal = () => {
             </div>
             
             <div className="menu-card-content">
-              <div className="menu-order-item">
-                <div className="menu-order-info">
-                  <h4>Desayuno Continental</h4>
-                  <p>Habitación #205</p>
-                  <p className="menu-order-date">22 Agosto 2025 - 08:30</p>
+              {ultimosPedidos.length > 0 ? (
+                ultimosPedidos.map((pedido, index) => {
+                  // Obtener el nombre y descripción del producto desde detalles[0].producto
+                  const nombreProducto = pedido.detalles?.[0]?.producto?.nombre || 'Pedido de Buffet';
+                  const descripcionProducto = pedido.detalles?.[0]?.producto?.descripcion || '';
+                  const cantidad = pedido.detalles?.[0]?.cantidad || 1;
+                  
+                  return (
+                    <div key={pedido.ID || index} className="menu-order-item">
+                      <div className="menu-order-info">
+                        <h4>{nombreProducto}</h4>
+                        <p>{descripcionProducto}</p>
+                        <p>Habitación #{pedido.IDHabitacion}</p>
+                        <p className="menu-order-date">
+                          {new Date(pedido.fechaPedido).toLocaleDateString('es-ES', { 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric' 
+                          })} - {new Date(pedido.fechaPedido).toLocaleTimeString('es-ES', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
+                      <div className="menu-order-status">
+                        <span className={`menu-status-badge ${
+                          pedido.estado?.toLowerCase() === 'entregado'
+                            ? 'menu-delivered'
+                            : pedido.estado?.toLowerCase() === 'pendiente'
+                            ? 'menu-pending'
+                            : pedido.estado?.toLowerCase() === 'en preparación'
+                            ? 'menu-pending'
+                            : pedido.estado?.toLowerCase() === 'en camino'
+                            ? 'menu-pending'
+                            : 'menu-delivered'
+                        }`}>
+                          {getEstadoPedidoTexto(pedido.estado)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="menu-order-item">
+                  <div className="menu-order-info">
+                    <p className="menu-text-muted">
+                      <i className="fas fa-shopping-basket menu-me-2"></i>
+                      No tienes pedidos recientes
+                    </p>
+                  </div>
                 </div>
-                <div className="menu-order-status">
-                  <span className="menu-status-badge menu-delivered">Entregado</span>
-                </div>
-              </div>
-              
-              <div className="menu-order-item">
-                <div className="menu-order-info">
-                  <h4>Menú especial</h4>
-                  <p>Habitación #205</p>
-                  <p className="menu-order-date">21 Agosto 2025 - 19:00</p>
-                </div>
-                <div className="menu-order-status">
-                  <span className="menu-status-badge menu-delivered">Entregado</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
+          {/* 🔹 ESTADÍSTICAS - DATOS DINÁMICOS */}
           <div className="menu-dashboard-card menu-stats-card">
             <div className="menu-card-header">
               <h3>
@@ -389,15 +599,15 @@ const MenuPrincipal = () => {
             <div className="menu-card-content">
               <div className="menu-stats-grid">
                 <div className="menu-stat-item">
-                  <div className="menu-stat-number">3</div>
+                  <div className="menu-stat-number">{estadisticas.totalReservas}</div>
                   <div className="menu-stat-label">Reservas Totales</div>
                 </div>
                 <div className="menu-stat-item">
-                  <div className="menu-stat-number">8</div>
+                  <div className="menu-stat-number">{estadisticas.totalPedidos}</div>
                   <div className="menu-stat-label">Pedidos Realizados</div>
                 </div>
                 <div className="menu-stat-item">
-                  <div className="menu-stat-number">1</div>
+                  <div className="menu-stat-number">{estadisticas.reservasActivas}</div>
                   <div className="menu-stat-label">Reserva Activa</div>
                 </div>
                 <div className="menu-stat-item">

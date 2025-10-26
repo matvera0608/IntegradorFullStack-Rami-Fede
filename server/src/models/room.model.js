@@ -52,3 +52,22 @@ export const getOcupadasPorTipo = async () => {
   `);
   return rows;
 };
+// Obtener el tipo de habitación a partir del IDHabitacion (de reservas)
+export const getTipoByReservaHabitacion = async (idHabitacionReserva) => {
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT h.type
+      FROM habitacion_numero hn
+      JOIN habitacion h ON hn.idHabitacion = h.id
+      WHERE hn.idNumero = ?
+      `,
+      [idHabitacionReserva]
+    );
+
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error(`Error al obtener el tipo de habitación para IDHabitacion ${idHabitacionReserva}:`, error);
+    throw error;
+  }
+};

@@ -336,14 +336,7 @@ return (
                       <span className={`estado-badge ${estadoBadge.class}`}>
                         {estadoBadge.text}
                       </span>
-                      {(esPendiente || esActiva) && (
-                        <span className={`urgencia-badge ${
-                          diasRestantes <= 3 ? 'urgencia-alta' :
-                          diasRestantes <= 7 ? 'urgencia-media' : 'urgencia-baja'
-                        }`}>
-                          {diasRestantes === 0 ? 'HOY' : diasRestantes === 1 ? 'MAÑANA' : diasRestantes < 0 ? 'PASADA' : `EN ${diasRestantes} DÍAS`}
-                        </span>
-                      )}
+                      
                     </div>
                     <p className="reserva-precio">{formatPrecio(reserva.precio)}</p>
                   </div>
@@ -369,7 +362,6 @@ return (
                       <i className="bi bi-person detalle-icon"></i>
                       <div>
                         <p className="detalle-label">Usuario</p>
-                        {/* aca necesito que llames a una función que me retorne el nombre del usuario */}
                         <p className="detalle-value">ID: {reserva.nombreUsuario}</p>
                       </div>
                     </div>

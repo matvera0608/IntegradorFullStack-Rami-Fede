@@ -3,12 +3,18 @@ import '../styles/UserOrders.css';
 
 const UserOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState('todos');
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    filterOrders();
+  }, [selectedFilter, orders]);
 
   const fetchOrders = async () => {
     try {
@@ -27,6 +33,14 @@ const UserOrders = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterOrders = () => {
+    if (selectedFilter === 'todos') {
+      setFilteredOrders(orders);
+    } else {
+      setFilteredOrders(orders.filter(order => order.estado === selectedFilter));
     }
   };
 
@@ -61,6 +75,11 @@ const UserOrders = () => {
     return configs[status] || configs['pendiente'];
   };
 
+  const getOrderCountByStatus = (status) => {
+    if (status === 'todos') return orders.length;
+    return orders.filter(order => order.estado === status).length;
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-AR', {
@@ -75,6 +94,15 @@ const UserOrders = () => {
   const calculateTotal = (detalles) => {
     return detalles.reduce((sum, det) => sum + parseFloat(det.subtotal), 0).toFixed(2);
   };
+
+  const filterOptions = [
+    { value: 'todos', label: 'Todos', icon: '📋' },
+    { value: 'pendiente', label: 'Pendiente', icon: '⏰' },
+    { value: 'en preparación', label: 'En Preparación', icon: '👨‍🍳' },
+    { value: 'en camino', label: 'En Camino', icon: '🚚' },
+    { value: 'entregado', label: 'Entregado', icon: '✅' },
+    { value: 'cancelado', label: 'Cancelado', icon: '❌' }
+  ];
 
   if (loading) {
     return (
@@ -148,84 +176,114 @@ const UserOrders = () => {
           </div>
         </div>
 
-        <div className="orders-list">
-          {orders.map((order) => {
-            const statusConfig = getStatusConfig(order.estado);
-            
-            return (
-              <div key={order.ID} className="order-card">
-                <div className="order-header">
-                  <div className="order-info">
-                    <div className="order-number-badge">
-                      <i className="bi bi-hash"></i>
-                      {order.ID}
-                    </div>
-                    <h5 className="order-date">
-                      <i className="bi bi-calendar-check me-2"></i>
-                      {formatDate(order.fechaPedido)}
-                    </h5>
-                    <div className="order-room">
-                      <i className="bi bi-door-open me-1"></i>
-                      Habitación <strong>{order.IDHabitacion}</strong>
-                    </div>
-                  </div>
-                  <div className="order-status">
-                    <span className={`status-badge ${statusConfig.badgeClass}`}>
-                      <span className="status-icon">{statusConfig.icon}</span>
-                      <span className="status-label">{statusConfig.label}</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="order-body">
-                  <div className="products-header">
-                    <i className="bi bi-basket2 me-2"></i>
-                    <span>Productos Pedidos</span>
-                  </div>
-                  
-                  <div className="products-list">
-                    {order.detalles.map((detalle, index) => (
-                      <div key={detalle.IdDetalle} className="product-item" style={{'--item-index': index}}>
-                        <div className="product-icon">
-                          <i className="bi bi-basket-fill"></i>
-                        </div>
-                        <div className="product-details">
-                          <div className="product-header-row">
-                            <h6 className="product-name">
-                              {detalle.producto?.nombre || 'Producto no disponible'}
-                            </h6>
-                            <div className="quantity-badge">{detalle.cantidad}x</div>
-                          </div>
-                          <p className="product-description">
-                            {detalle.producto?.descripcion || ''}
-                          </p>
-                          <div className="product-meta">
-                            <span className="unit-price">
-                              <i className="bi bi-tag me-1"></i>
-                              ${parseFloat(detalle.producto?.precio || 0).toFixed(2)} c/u
-                            </span>
-                          </div>
-                        </div>
-                        <div className="product-price-wrapper">
-                          <div className="product-total">
-                            ${parseFloat(detalle.subtotal).toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="order-footer">
-                    <div className="order-total-container">
-                      <span className="total-label">Total del pedido</span>
-                      <span className="total-amount">${calculateTotal(order.detalles)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Filtros */}
+        <div className="filters-container">
+          <div className="filters-wrapper">
+            {filterOptions.map((option) => {
+              const count = getOrderCountByStatus(option.value);
+              return (
+                <button
+                  key={option.value}
+                  className={`filter-btn ${selectedFilter === option.value ? 'active' : ''}`}
+                  onClick={() => setSelectedFilter(option.value)}
+                >
+                  <span className="filter-icon">{option.icon}</span>
+                  <span className="filter-label">{option.label}</span>
+                  <span className="filter-count">{count}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {filteredOrders.length === 0 ? (
+          <div className="no-results-container">
+            <div className="no-results-icon">
+              <i className="bi bi-search"></i>
+            </div>
+            <h4 className="no-results-title">No hay pedidos con este estado</h4>
+            <p className="no-results-text">Intenta seleccionar otro filtro</p>
+          </div>
+        ) : (
+          <div className="orders-list">
+            {filteredOrders.map((order) => {
+              const statusConfig = getStatusConfig(order.estado);
+              
+              return (
+                <div key={order.ID} className="order-card">
+                  <div className="order-header">
+                    <div className="order-info">
+                      <div className="order-number-badge">
+                        <i className="bi bi-hash"></i>
+                        {order.ID}
+                      </div>
+                      <h5 className="order-date">
+                        <i className="bi bi-calendar-check me-2"></i>
+                        {formatDate(order.fechaPedido)}
+                      </h5>
+                      <div className="order-room">
+                        <i className="bi bi-door-open me-1"></i>
+                        Habitación <strong>{order.IDHabitacion}</strong>
+                      </div>
+                    </div>
+                    <div className="order-status">
+                      <span className={`status-badge ${statusConfig.badgeClass}`}>
+                        <span className="status-icon">{statusConfig.icon}</span>
+                        <span className="status-label">{statusConfig.label}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="order-body">
+                    <div className="products-header">
+                      <i className="bi bi-basket2 me-2"></i>
+                      <span>Productos Pedidos</span>
+                    </div>
+                    
+                    <div className="products-list">
+                      {order.detalles.map((detalle, index) => (
+                        <div key={detalle.IdDetalle} className="product-item" style={{'--item-index': index}}>
+                          <div className="product-icon">
+                            <i className="bi bi-basket-fill"></i>
+                          </div>
+                          <div className="product-details">
+                            <div className="product-header-row">
+                              <h6 className="product-name">
+                                {detalle.producto?.nombre || 'Producto no disponible'}
+                              </h6>
+                              <div className="quantity-badge">{detalle.cantidad}x</div>
+                            </div>
+                            <p className="product-description">
+                              {detalle.producto?.descripcion || ''}
+                            </p>
+                            <div className="product-meta">
+                              <span className="unit-price">
+                                <i className="bi bi-tag me-1"></i>
+                                ${parseFloat(detalle.producto?.precio || 0).toFixed(2)} c/u
+                              </span>
+                            </div>
+                          </div>
+                          <div className="product-price-wrapper">
+                            <div className="product-total">
+                              ${parseFloat(detalle.subtotal).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="order-footer">
+                      <div className="order-total-container">
+                        <span className="total-label">Total del pedido</span>
+                        <span className="total-amount">${calculateTotal(order.detalles)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
